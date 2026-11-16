@@ -1,0 +1,3968 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>DANSOS SEKOLAH — Sistem Iuran & Transparansi Dana Sosial</title>
+  <meta name="description" content="Aplikasi manajemen iuran dan transparansi keuangan dana sosial sekolah berbasis web, mudah diakses melalui HP dan optimal untuk monitoring di laptop." />
+  
+  <!-- Metadata OpenGraph / Thumbnail untuk GitHub Pages & Media Sosial -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DANSOS SEKOLAH — Transparansi Dana Sosial" />
+  <meta property="og:description" content="Pantau saldo kas, status iuran bulanan, dan penyaluran dana sosial sekolah secara transparan dan real-time." />
+  <meta name="theme-color" content="#0f766e" />
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       ISOLASI FULL-PAGE UNTUK BLOGGER / GOOGLE SITES / GITHUB PAGES
+       ========================================================================== */
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #ccfbf1;
+      --primary-soft: #f0fdfa;
+      --secondary: #0284c7;
+      --secondary-soft: #e0f2fe;
+      --success: #059669;
+      --success-soft: #d1fae5;
+      --warning: #d97706;
+      --warning-soft: #fef3c7;
+      --danger: #e11d48;
+      --danger-soft: #ffe4e6;
+      --bg-app: #edf2f7;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-light: #94a3b8;
+      --border: #cbd5e1;
+      --border-strong: #94a3b8;
+      --frame-border: #94a3b8;
+      --shadow-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.08), 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 8px 18px -4px rgba(15, 23, 42, 0.11), 0 3px 6px -2px rgba(15, 23, 42, 0.06);
+      --shadow-lg: 0 14px 30px -6px rgba(15, 23, 42, 0.16), 0 8px 12px -6px rgba(15, 23, 42, 0.09);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --sidebar-w: 268px;
+      --header-h: 68px;
+      --bottom-nav-h: 72px;
+    }
+
+    /* Sembunyikan elemen bawaan template Blogger tanpa merusak container utama */
+    body.blogger-embed .header-outer,
+    body.blogger-embed .tabs-outer,
+    body.blogger-embed .sidebar-container,
+    body.blogger-embed .footer-outer,
+    body.blogger-embed .blog-pager,
+    body.blogger-embed #navbar-iframe {
+      display: none !important;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ==========================================================================
+       APP SHELL (MOBILE-FIRST & DESKTOP SIDEBAR)
+       ========================================================================== */
+    #app-dansos-root {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* Sidebar Desktop */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg-card);
+      border-right: 1.5px solid var(--border);
+      box-shadow: 2px 0 10px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 40;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-brand {
+      padding: 22px 20px;
+      border-bottom: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+    }
+
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .brand-info p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 175px;
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-light);
+      padding: 10px 12px 6px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 11px 14px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-app);
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .nav-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1.5px solid var(--border);
+      background: #f8fafc;
+    }
+
+    .mode-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .status-dot.preview { background: var(--warning); }
+    .status-dot.live { background: var(--success); }
+
+    /* Main Content Wrapper */
+    .main-wrapper {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Top Header */
+    .topbar {
+      height: var(--header-h);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1.5px solid var(--border);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      gap: 12px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mobile-logo {
+      display: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .page-heading h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page-heading p {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .role-chip.guest {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .role-chip.admin {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary-light);
+    }
+
+    /* Main Container */
+    .content-area {
+      padding: 24px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* Bottom Navigation (Mobile Only — Floating Dock) */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      left: 12px;
+      right: 12px;
+      height: var(--bottom-nav-h);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      z-index: 45;
+      padding: 6px 8px;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+    }
+
+    .bnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 2px;
+      border-radius: 14px;
+      position: relative;
+      transition: transform 0.16s ease, color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .bnav-item:active {
+      transform: scale(0.92);
+    }
+
+    .bnav-icon-wrap {
+      width: 44px;
+      height: 32px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .bnav-item svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.25s ease;
+    }
+
+    .bnav-item.active .bnav-icon-wrap {
+      background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+      color: #ffffff;
+      transform: translateY(-4px) scale(1.06);
+      box-shadow: 0 6px 14px rgba(15, 118, 110, 0.36);
+    }
+
+    .bnav-item.active {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .bnav-item.active::after {
+      content: "";
+      width: 14px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--primary);
+      margin-top: 1px;
+      animation: navDotIn 0.24s ease-out;
+    }
+
+    @keyframes navDotIn {
+      from { transform: scaleX(0); opacity: 0; }
+      to { transform: scaleX(1); opacity: 1; }
+    }
+
+    /* Menu Tengah (Transaksi) Lebih Menonjol */
+    .bnav-item.bnav-center .bnav-icon-wrap {
+      width: 48px;
+      height: 36px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1.5px solid var(--primary-light);
+    }
+
+    .bnav-item.bnav-center.active .bnav-icon-wrap {
+      background: linear-gradient(135deg, #0f766e 0%, #0284c7 100%);
+      color: #ffffff;
+      border-color: transparent;
+      transform: translateY(-6px) scale(1.1);
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.4);
+    }
+
+    .bnav-badge {
+      position: absolute;
+      top: -3px;
+      right: 2px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 99px;
+      background: var(--danger);
+      color: #ffffff;
+      font-size: 9.5px;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 2px 5px rgba(225, 29, 72, 0.4);
+    }
+
+    /* ==========================================================================
+       COMPONENTS: BUTTONS, CARDS, FORMS, BADGES, TABLES
+       ========================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 12.5px;
+    }
+
+    .btn-xs {
+      padding: 4px 8px;
+      font-size: 11.5px;
+      border-radius: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      box-shadow: 0 3px 10px rgba(15, 118, 110, 0.25);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #047857;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #be123c;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: var(--bg-app);
+      border-color: #94a3b8;
+    }
+
+    .btn-soft-primary {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: var(--primary-light);
+    }
+
+    .btn-soft-primary:hover:not(:disabled) {
+      background: var(--primary-light);
+    }
+
+    .btn-soft-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .btn-soft-danger:hover:not(:disabled) {
+      background: #fecdd3;
+    }
+
+    .btn-wa {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .btn-wa:hover:not(:disabled) {
+      background: #15803d;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 20px;
+      border-bottom: 1.5px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* Hero Balance Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 55%, #134e4a 100%);
+      border: 1.5px solid #0d9488;
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 14px 28px -8px rgba(15, 118, 110, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #99f6e4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-amount {
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 6px 0 8px;
+    }
+
+    .hero-meta {
+      font-size: 12.5px;
+      color: #ccfbf1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-light {
+      background: #ffffff;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .btn-hero-light:hover {
+      background: #f0fdfa;
+    }
+
+    .btn-hero-glass {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-hero-glass:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* KPI Stat Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-top: 3.5px solid var(--primary);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-strong);
+    }
+
+    .kpi-card:nth-child(1) { border-top-color: var(--success); }
+    .kpi-card:nth-child(2) { border-top-color: var(--danger); }
+    .kpi-card:nth-child(3) { border-top-color: var(--primary); }
+    .kpi-card:nth-child(4) { border-top-color: var(--secondary); }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .kpi-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-value {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .kpi-foot {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Dashboard 2-Column Section */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 20px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .badge-success { background: var(--success-soft); color: var(--success); }
+    .badge-warning { background: var(--warning-soft); color: var(--warning); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-info { background: var(--secondary-soft); color: var(--secondary); }
+    .badge-neutral { background: #f1f5f9; color: #475569; }
+
+    /* Filters Bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .input-control, .select-control, .textarea-control {
+      padding: 9px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--text-main);
+      background: #ffffff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-control:focus, .select-control:focus, .textarea-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 210px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding-left: 36px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-light);
+    }
+
+    /* Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      font-weight: 800;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #dbe3ec;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Matrix Cells */
+    .matrix-cell {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+
+    .matrix-cell:hover {
+      transform: scale(1.1);
+    }
+
+    .matrix-cell.paid {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: #a7f3d0;
+    }
+
+    .matrix-cell.unpaid {
+      background: #f8fafc;
+      color: #94a3b8;
+      border-color: var(--border);
+    }
+
+    .matrix-cell.overdue {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-color: #fde68a;
+    }
+
+    /* Mobile Card Lists */
+    .mobile-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+
+    .item-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .item-card:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
+    }
+
+    .trx-card-masuk { border-left: 4px solid var(--success); }
+    .trx-card-keluar { border-left: 4px solid var(--danger); }
+
+    .mini-months {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .mini-m-tag {
+      text-align: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 4px 2px;
+      border-radius: 5px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: modalPop 0.18s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      background: #f8fafc;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .month-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .month-check-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 6px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .month-check-item.selected {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .month-check-item.already-paid {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: var(--border);
+      cursor: not-allowed;
+    }
+
+    /* Digital Receipt Styling */
+    .receipt-paper {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: #fcfdfe;
+      position: relative;
+    }
+
+    .receipt-stamp {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      border: 2px solid var(--success);
+      color: var(--success);
+      font-weight: 800;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      transform: rotate(-6deg);
+      letter-spacing: 0.08em;
+    }
+
+    /* Toast & Loading */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 360px;
+    }
+
+    .toast {
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    .toast.success { background: #065f46; border-left: 4px solid #34d399; }
+    .toast.error { background: #9f1239; border-left: 4px solid #fb7185; }
+    .toast.info { background: #1e293b; border-left: 4px solid #38bdf8; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(2px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      gap: 12px;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* SVG Bar Chart (Motion Graphic Animated) */
+    .chart-live-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+    }
+
+    .chart-box {
+      width: 100%;
+      overflow-x: auto;
+      padding: 10px 6px 4px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .chart-col-group {
+      cursor: pointer;
+    }
+
+    .chart-hover-bg {
+      fill: transparent;
+      transition: fill 0.18s ease;
+    }
+
+    .chart-col-group:hover .chart-hover-bg,
+    .chart-col-group.active-col .chart-hover-bg {
+      fill: rgba(15, 118, 110, 0.07);
+    }
+
+    .chart-bar-anim {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: chartBarRise 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+      transition: filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .chart-col-group:hover .chart-bar-anim,
+    .chart-col-group.active-col .chart-bar-anim {
+      filter: brightness(1.08) drop-shadow(0 4px 8px rgba(15, 23, 42, 0.18));
+    }
+
+    @keyframes chartBarRise {
+      0% {
+        transform: scaleY(0);
+        opacity: 0.15;
+      }
+      75% {
+        transform: scaleY(1.04);
+        opacity: 1;
+      }
+      100% {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .chart-trend-area {
+      opacity: 0;
+      animation: chartFadeIn 0.8s ease 0.45s forwards;
+    }
+
+    .chart-trend-line {
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 1200;
+      animation: chartLineDraw 1.25s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+    }
+
+    @keyframes chartLineDraw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes chartFadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .chart-dot {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: chartDotPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes chartDotPop {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .chart-pulse-ring {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: chartPulse 2s ease-out infinite;
+    }
+
+    @keyframes chartPulse {
+      0% {
+        transform: scale(0.9);
+        opacity: 0.75;
+      }
+      100% {
+        transform: scale(2.3);
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chart-bar-anim, .chart-trend-line, .chart-trend-area, .chart-dot, .chart-pulse-ring {
+        animation: none !important;
+        stroke-dashoffset: 0 !important;
+        opacity: 1 !important;
+      }
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1023px) {
+      .sidebar {
+        display: none;
+      }
+      .main-wrapper {
+        margin-left: 0;
+        padding-bottom: calc(var(--bottom-nav-h) + 26px);
+      }
+      .mobile-logo {
+        display: flex;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .dash-grid {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        padding: 0 16px;
+      }
+      .content-area {
+        padding: 16px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .kpi-card {
+        padding: 14px;
+      }
+      .kpi-value {
+        font-size: 16.5px;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .hero-banner {
+        padding: 18px;
+      }
+      .hide-xs {
+        display: none !important;
+      }
+    }
+
+    /* Print Styles (Laporan Resmi & Kwitansi) */
+    @media print {
+      .sidebar, .topbar, .bottom-nav, .no-print, .toast-container, .loading-overlay {
+        display: none !important;
+      }
+      .main-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+      }
+      .content-area {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      body {
+        background: #ffffff !important;
+      }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-dansos-root">
+    <!-- SIDEBAR (DESKTOP MONITORING) -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></svg>
+        </div>
+        <div class="brand-info">
+          <h1>DANSOS SEKOLAH</h1>
+          <p id="sidebar-school-name">Memuat sekolah...</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Menu Utama</div>
+        <button class="nav-btn active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-page="members" onclick="navigateTo('members')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Anggota & Iuran</span>
+          <span class="nav-badge" id="badge-unpaid-count" title="Belum bayar bulan ini">0</span>
+        </button>
+        <button class="nav-btn" data-page="transactions" onclick="navigateTo('transactions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Transaksi & Kas</span>
+        </button>
+        <button class="nav-btn" data-page="reports" onclick="navigateTo('reports')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Laporan Keuangan</span>
+        </button>
+
+        <div class="nav-section-label">Administrasi</div>
+        <button class="nav-btn" data-page="admin" onclick="navigateTo('admin')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Pengaturan Admin</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="mode-pill">
+          <span id="connection-status-label"><span class="status-dot preview"></span>Mode Preview</span>
+          <strong id="sidebar-year-label" class="mono">2026</strong>
+        </div>
+        <button id="sidebar-auth-btn" class="btn btn-primary" style="width: 100%;" onclick="handleAuthButtonClick()">
+          Login Admin
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="mobile-logo">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/></svg>
+          </div>
+          <div class="page-heading">
+            <h2 id="topbar-title">DANA SOSIAL TELADAN</h2>
+            <p id="topbar-subtitle">Transparansi kas masuk & penyaluran bantuan sosial</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <span id="topbar-role-chip" class="role-chip guest">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="hide-xs">Mode Pantau</span>
+          </span>
+          <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Muat Ulang Data">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button id="topbar-auth-btn" class="btn btn-primary btn-sm" onclick="handleAuthButtonClick()">
+            Login
+          </button>
+        </div>
+      </header>
+
+      <main class="content-area" id="main-view">
+        <!-- Konten dinamis dirender di sini -->
+      </main>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (MOBILE-FIRST FLOATING DOCK) -->
+    <nav class="bottom-nav" aria-label="Navigasi Utama">
+      <button class="bnav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <span class="bnav-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </span>
+        <span>Beranda</span>
+      </button>
+      <button class="bnav-item" data-page="members" onclick="navigateTo('members')">
+        <span class="bnav-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="bnav-badge" id="bnav-badge-unpaid">0</span>
+        </span>
+        <span>Anggota</span>
+      </button>
+      <button class="bnav-item bnav-center" data-page="transactions" onclick="navigateTo('transactions')">
+        <span class="bnav-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </span>
+        <span>Transaksi</span>
+      </button>
+      <button class="bnav-item" data-page="reports" onclick="navigateTo('reports')">
+        <span class="bnav-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        <span>Laporan</span>
+      </button>
+      <button class="bnav-item" data-page="admin" onclick="navigateTo('admin')">
+        <span class="bnav-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </span>
+        <span>Admin</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL UNIVERSAL -->
+  <div id="universal-modal" class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box" id="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Judul Modal</h3>
+        <button class="modal-close" onclick="closeModal()" aria-label="Tutup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p id="loading-text" style="font-weight: 700; color: var(--primary); font-size: 14px;">Memproses data...</p>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    // ==========================================
+    // KONFIGURASI APLIKASI
+    // ==========================================
+
+    // true = Mode Preview menggunakan data dummy
+    // false = Mode Production menggunakan GAS API
+    const IS_PREVIEW = false;
+
+    // URL Web App Google Apps Script
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz7AemJAtK6pSGhB9CBVANdqFgHZqfZ6BSHAfcbtFa-C3fBR8AUN0XzKKI10NP42Lp-/exec";
+
+    // ==========================================
+    // KONSTANTA & STATE GLOBAL
+    // ==========================================
+    const MONTHS_ID = [
+      { num: "01", short: "Jan", name: "Januari" },
+      { num: "02", short: "Feb", name: "Februari" },
+      { num: "03", short: "Mar", name: "Maret" },
+      { num: "04", short: "Apr", name: "April" },
+      { num: "05", short: "Mei", name: "Mei" },
+      { num: "06", short: "Jun", name: "Juni" },
+      { num: "07", short: "Jul", name: "Juli" },
+      { num: "08", short: "Agu", name: "Agustus" },
+      { num: "09", short: "Sep", name: "September" },
+      { num: "10", short: "Okt", name: "Oktober" },
+      { num: "11", short: "Nov", name: "November" },
+      { num: "12", short: "Des", name: "Desember" }
+    ];
+
+    const TRX_CATEGORIES = {
+      Masuk: ["Iuran Rutin", "Donasi Sukarela", "Infaq / Sumbangan", "Pemasukan Lainnya"],
+      Keluar: ["Santunan Sakit", "Santunan Duka", "Bantuan Sosial", "Tali Asih / Pernikahan", "Operasional"]
+    };
+
+    const state = {
+      currentPage: "dashboard",
+      adminTab: "members",
+      selectedYear: "2026",
+      memberViewMode: window.innerWidth >= 1024 ? "matrix" : "cards",
+      memberSearch: "",
+      memberUnitFilter: "ALL",
+      memberStatusFilter: "ALL",
+      trxSearch: "",
+      trxTypeFilter: "ALL",
+      trxCatFilter: "ALL",
+      trxMonthFilter: "ALL",
+      reportMode: "monthly",
+      reportMonth: "11",
+      reportYear: "2026",
+      session: null, // { token, username, nama_lengkap, role }
+      settings: {
+        nama_sekolah: "SMA Negeri 1 Harapan Bangsa",
+        tahun_aktif: "2026",
+        nominal_default: 25000,
+        nama_bendahara: "Hj. Siti Aminah, S.Pd.",
+        nama_kepsek: "Drs. H. Ahmad Fauzi, M.Pd.",
+        info_rekening: "BSI 7123456789 a.n. Dana Sosial SMAN 1 Harapan Bangsa"
+      },
+      members: [],
+      transactions: [],
+      users: []
+    };
+
+    // ==========================================
+    // DATA DUMMY UNTUK MODE PREVIEW
+    // ==========================================
+    function initDummyData() {
+      state.members = [
+        { member_id: "MBR-001", kode_anggota: "197805122005011004", nama: "Drs. H. Ahmad Fauzi, M.Pd.", unit_kelompok: "Kepala Sekolah", no_wa: "6281234567801", nominal_iuran: 50000, status: "Aktif" },
+        { member_id: "MBR-002", kode_anggota: "198203142008012011", nama: "Hj. Siti Aminah, S.Pd.", unit_kelompok: "Guru", no_wa: "6281234567802", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-003", kode_anggota: "198507212010011009", nama: "Budi Santoso, S.Kom.", unit_kelompok: "Guru", no_wa: "6281234567803", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-004", kode_anggota: "198811052014022003", nama: "Rina Marlina, M.Pd.", unit_kelompok: "Guru", no_wa: "6281234567804", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-005", kode_anggota: "199002182015031002", nama: "Dedi Kurniawan, S.Pd.", unit_kelompok: "Guru", no_wa: "6281234567805", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-006", kode_anggota: "199109302019032008", nama: "Nurul Hidayah, S.Si.", unit_kelompok: "Guru", no_wa: "6281234567806", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-007", kode_anggota: "198406122009021005", nama: "Hendra Wijaya, S.E.", unit_kelompok: "Staf TU", no_wa: "6281234567807", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-008", kode_anggota: "199304172020122014", nama: "Fitriani Rahayu, A.Md.", unit_kelompok: "Staf TU", no_wa: "6281234567808", nominal_iuran: 25000, status: "Aktif" },
+        { member_id: "MBR-009", kode_anggota: "198012012007011006", nama: "Slamet Riyadi", unit_kelompok: "Karyawan", no_wa: "6281234567809", nominal_iuran: 20000, status: "Aktif" },
+        { member_id: "MBR-010", kode_anggota: "198708252014021001", nama: "Agus Setiawan", unit_kelompok: "Karyawan", no_wa: "6281234567810", nominal_iuran: 20000, status: "Aktif" }
+      ];
+
+      const trxs = [];
+      let counter = 1;
+      const pad = (n) => String(n).padStart(3, "0");
+
+      // Generate realistic iuran payments Jan - Nov 2026
+      state.members.forEach((m, idx) => {
+        // Anggota 1-6 lunas sampai Nov (bulan 11), anggota 7-8 sampai Okt (bulan 10), anggota 9-10 sampai Sep (bulan 09)
+        const maxMonth = idx < 6 ? 11 : idx < 8 ? 10 : 9;
+        for (let mo = 1; mo <= maxMonth; mo++) {
+          const mStr = String(mo).padStart(2, "0");
+          trxs.push({
+            trx_id: `TRX-2026${mStr}-${pad(counter++)}`,
+            tanggal: `2026-${mStr}-05`,
+            jenis: "Masuk",
+            kategori: "Iuran Rutin",
+            member_id: m.member_id,
+            periode_bulan: `2026-${mStr}`,
+            nominal: m.nominal_iuran,
+            keterangan: `Iuran Dana Sosial Bulan ${MONTHS_ID[mo - 1].name} 2026`,
+            bukti_url: "",
+            created_by: "admin"
+          });
+        }
+      });
+
+      // Tambahkan donasi & penyaluran dana sosial realistis
+      trxs.push(
+        {
+          trx_id: `TRX-202603-${pad(counter++)}`,
+          tanggal: "2026-03-18",
+          jenis: "Keluar",
+          kategori: "Santunan Sakit",
+          member_id: "MBR-005",
+          periode_bulan: "2026-03",
+          nominal: 500000,
+          keterangan: "Santunan rawat inap Bapak Dedi Kurniawan di RSUD",
+          bukti_url: "https://example.com/bukti-santunan-1",
+          created_by: "admin"
+        },
+        {
+          trx_id: `TRX-202606-${pad(counter++)}`,
+          tanggal: "2026-06-12",
+          jenis: "Keluar",
+          kategori: "Santunan Duka",
+          member_id: "MBR-009",
+          periode_bulan: "2026-06",
+          nominal: 750000,
+          keterangan: "Santunan duka wafatnya orang tua Bapak Slamet Riyadi",
+          bukti_url: "https://example.com/bukti-santunan-2",
+          created_by: "admin"
+        },
+        {
+          trx_id: `TRX-202608-${pad(counter++)}`,
+          tanggal: "2026-08-20",
+          jenis: "Masuk",
+          kategori: "Donasi Sukarela",
+          member_id: "",
+          periode_bulan: "2026-08",
+          nominal: 600000,
+          keterangan: "Infaq & donasi alumni angkatan 2015 untuk kas sosial",
+          bukti_url: "",
+          created_by: "admin"
+        },
+        {
+          trx_id: `TRX-202610-${pad(counter++)}`,
+          tanggal: "2026-10-14",
+          jenis: "Keluar",
+          kategori: "Bantuan Sosial",
+          member_id: "",
+          periode_bulan: "2026-10",
+          nominal: 450000,
+          keterangan: "Bantuan sosial siswa yatim/piatu & warga sekitar terdampak musibah",
+          bukti_url: "https://example.com/bukti-bansos-3",
+          created_by: "admin"
+        },
+        {
+          trx_id: `TRX-202611-${pad(counter++)}`,
+          tanggal: "2026-11-09",
+          jenis: "Keluar",
+          kategori: "Santunan Sakit",
+          member_id: "MBR-004",
+          periode_bulan: "2026-11",
+          nominal: 400000,
+          keterangan: "Tali asih & santunan pemulihan kesehatan Ibu Rina Marlina",
+          bukti_url: "https://example.com/bukti-santunan-4",
+          created_by: "admin"
+        }
+      );
+
+      state.transactions = trxs;
+      state.users = [
+        { user_id: "USR-001", username: "admin", nama_lengkap: "Hj. Siti Aminah (Bendahara)", role: "Admin", status: "Aktif" },
+        { user_id: "USR-002", username: "operator_tu", nama_lengkap: "Hendra Wijaya (Staf TU)", role: "Admin", status: "Aktif" }
+      ];
+    }
+
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    function isAdmin() {
+      return state.session && state.session.role === "Admin";
+    }
+
+    function formatRupiah(num) {
+      const val = Number(num) || 0;
+      return "Rp " + val.toLocaleString("id-ID");
+    }
+
+    function formatDateID(dateStr) {
+      if (!dateStr) return "-";
+      const parts = String(dateStr).split("-");
+      if (parts.length !== 3) return dateStr;
+      const mIdx = parseInt(parts[1], 10) - 1;
+      const mName = MONTHS_ID[mIdx] ? MONTHS_ID[mIdx].short : parts[1];
+      return `${parts[2]} ${mName} ${parts[0]}`;
+    }
+
+    function formatPeriodeID(ym) {
+      if (!ym || !ym.includes("-")) return ym || "-";
+      const [y, m] = ym.split("-");
+      const mObj = MONTHS_ID.find(x => x.num === m);
+      return mObj ? `${mObj.name} ${y}` : ym;
+    }
+
+    function getCurrentYM() {
+      // Gunakan bulan berjalan (November 2026 pada konteks aktif atau sistem)
+      const now = new Date();
+      const y = state.selectedYear || String(now.getFullYear());
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      return `${y}-${m}`;
+    }
+
+    function getMemberName(memberId) {
+      if (!memberId) return "-";
+      const m = state.members.find(x => x.member_id === memberId);
+      return m ? m.nama : memberId;
+    }
+
+    function maskPhone(phone) {
+      if (!phone) return "-";
+      if (isAdmin()) return phone;
+      const s = String(phone);
+      if (s.length <= 6) return "****";
+      return s.slice(0, 5) + "****" + s.slice(-3);
+    }
+
+    function terbilang(angka) {
+      const n = Math.floor(Math.abs(Number(angka) || 0));
+      if (n === 0) return "Nol Rupiah";
+      const satuan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+      function konversi(x) {
+        if (x < 12) return satuan[x];
+        if (x < 20) return konversi(x - 10) + " Belas";
+        if (x < 100) return konversi(Math.floor(x / 10)) + " Puluh " + konversi(x % 10);
+        if (x < 200) return "Seratus " + konversi(x - 100);
+        if (x < 1000) return konversi(Math.floor(x / 100)) + " Ratus " + konversi(x % 100);
+        if (x < 2000) return "Seribu " + konversi(x - 1000);
+        if (x < 1000000) return konversi(Math.floor(x / 1000)) + " Ribu " + konversi(x % 1000);
+        if (x < 1000000000) return konversi(Math.floor(x / 1000000)) + " Juta " + konversi(x % 1000000);
+        return konversi(Math.floor(x / 1000000000)) + " Miliar " + konversi(x % 1000000000);
+      }
+      return konversi(n).replace(/\s+/g, " ").trim() + " Rupiah";
+    }
+
+    function escapeHTML(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(20px)";
+        toast.style.transition = "all 0.2s";
+        setTimeout(() => toast.remove(), 220);
+      }, 3400);
+    }
+
+    function setLoading(active, text = "Memproses data...") {
+      const el = document.getElementById("loading-overlay");
+      document.getElementById("loading-text").textContent = text;
+      el.classList.toggle("active", active);
+    }
+
+    function openModal(title, bodyHTML, footerHTML = "") {
+      document.getElementById("modal-title").textContent = title;
+      document.getElementById("modal-body").innerHTML = bodyHTML;
+      document.getElementById("modal-footer").innerHTML = footerHTML;
+      document.getElementById("universal-modal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("universal-modal").classList.remove("open");
+    }
+
+    // ==========================================
+    // KOMUNIKASI API (PREVIEW & PRODUCTION GAS)
+    // ==========================================
+    async function apiRequest(action, payload = {}, method = "POST") {
+      if (IS_PREVIEW) {
+        await new Promise(r => setTimeout(r, 240));
+        return handlePreviewApi(action, payload);
+      }
+
+      if (!GAS_URL || GAS_URL === "URL_DEPLOY_GAS_ANDA") {
+        throw new Error("GAS_URL belum dikonfigurasi. Silakan isi URL Web App Google Apps Script Anda.");
+      }
+
+      const token = state.session ? state.session.token : "";
+      let response;
+      if (method === "GET") {
+        const url = new URL(GAS_URL);
+        url.searchParams.set("action", action);
+        if (token) url.searchParams.set("token", token);
+        Object.keys(payload).forEach(k => url.searchParams.set(k, payload[k]));
+        response = await fetch(url.toString(), { method: "GET" });
+      } else {
+        response = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action, token, ...payload })
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
+      }
+      const resJson = await response.json();
+      if (resJson.status === "error") {
+        throw new Error(resJson.message || "Terjadi kesalahan pada server.");
+      }
+      return resJson;
+    }
+
+    // Simulasi Backend Lengkap untuk Mode Preview
+    function handlePreviewApi(action, payload) {
+      switch (action) {
+        case "getInitialData":
+          return {
+            status: "success",
+            data: {
+              settings: state.settings,
+              members: state.members,
+              transactions: state.transactions,
+              users: isAdmin() ? state.users : []
+            }
+          };
+
+        case "login": {
+          const { username, password } = payload;
+          if ((username === "admin" && password === "123456") || (username === "peserta" && password === "123456")) {
+            const isAdm = username === "admin";
+            return {
+              status: "success",
+              message: "Login berhasil (Mode Preview)",
+              data: {
+                token: "PREVIEW-TOKEN-" + Date.now(),
+                username,
+                nama_lengkap: isAdm ? "Hj. Siti Aminah (Bendahara)" : "Anggota Sekolah",
+                role: isAdm ? "Admin" : "Peserta"
+              }
+            };
+          }
+          return { status: "error", message: "Username atau password salah. (Preview Admin: admin / 123456)" };
+        }
+
+        case "logout":
+          return { status: "success", message: "Berhasil keluar." };
+
+        case "saveMember": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak. Hanya Admin yang dapat mengubah data." };
+          if (payload.member_id) {
+            const idx = state.members.findIndex(m => m.member_id === payload.member_id);
+            if (idx === -1) return { status: "error", message: "Anggota tidak ditemukan." };
+            state.members[idx] = { ...state.members[idx], ...payload };
+            return { status: "success", message: "Data anggota berhasil diperbarui." };
+          } else {
+            const newId = "MBR-" + String(Date.now()).slice(-5);
+            state.members.push({ ...payload, member_id: newId });
+            return { status: "success", message: "Anggota baru berhasil ditambahkan." };
+          }
+        }
+
+        case "deleteMember": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
+          state.members = state.members.filter(m => m.member_id !== payload.member_id);
+          return { status: "success", message: "Data anggota berhasil dihapus." };
+        }
+
+        case "saveTransaction": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak. Hanya Admin yang dapat mencatat transaksi." };
+          if (payload.trx_id) {
+            const idx = state.transactions.findIndex(t => t.trx_id === payload.trx_id);
+            if (idx === -1) return { status: "error", message: "Transaksi tidak ditemukan." };
+            state.transactions[idx] = { ...state.transactions[idx], ...payload };
+            return { status: "success", message: "Transaksi berhasil diperbarui." };
+          } else if (Array.isArray(payload.periode_list) && payload.periode_list.length > 0) {
+            payload.periode_list.forEach((ym, i) => {
+              state.transactions.unshift({
+                trx_id: `TRX-${ym.replace("-", "")}-${String(Date.now()).slice(-4)}${i + 1}`,
+                tanggal: payload.tanggal,
+                jenis: "Masuk",
+                kategori: payload.kategori || "Iuran Rutin",
+                member_id: payload.member_id,
+                periode_bulan: ym,
+                nominal: Number(payload.nominal_per_bulan),
+                keterangan: payload.keterangan || `Iuran Dana Sosial Periode ${formatPeriodeID(ym)}`,
+                bukti_url: payload.bukti_url || "",
+                created_by: state.session.username
+              });
+            });
+            return { status: "success", message: `${payload.periode_list.length} bulan pembayaran iuran berhasil dicatat.` };
+          } else {
+            state.transactions.unshift({
+              trx_id: `TRX-${String(payload.tanggal).replace(/-/g, "")}-${String(Date.now()).slice(-4)}`,
+              tanggal: payload.tanggal,
+              jenis: payload.jenis,
+              kategori: payload.kategori,
+              member_id: payload.member_id || "",
+              periode_bulan: payload.periode_bulan || String(payload.tanggal).slice(0, 7),
+              nominal: Number(payload.nominal),
+              keterangan: payload.keterangan,
+              bukti_url: payload.bukti_url || "",
+              created_by: state.session.username
+            });
+            return { status: "success", message: "Transaksi berhasil disimpan." };
+          }
+        }
+
+        case "deleteTransaction": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
+          state.transactions = state.transactions.filter(t => t.trx_id !== payload.trx_id);
+          return { status: "success", message: "Transaksi berhasil dihapus." };
+        }
+
+        case "saveSettings": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
+          state.settings = { ...state.settings, ...payload.settings };
+          state.selectedYear = state.settings.tahun_aktif || state.selectedYear;
+          return { status: "success", message: "Pengaturan aplikasi berhasil disimpan." };
+        }
+
+        case "saveUser": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
+          if (payload.user_id) {
+            const idx = state.users.findIndex(u => u.user_id === payload.user_id);
+            if (idx > -1) state.users[idx] = { ...state.users[idx], ...payload };
+            return { status: "success", message: "Akun admin diperbarui." };
+          } else {
+            state.users.push({
+              user_id: "USR-" + String(Date.now()).slice(-4),
+              username: payload.username,
+              nama_lengkap: payload.nama_lengkap,
+              role: "Admin",
+              status: payload.status || "Aktif"
+            });
+            return { status: "success", message: "Akun admin baru ditambahkan." };
+          }
+        }
+
+        case "deleteUser": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
+          if (state.users.length <= 1) return { status: "error", message: "Minimal harus ada 1 akun admin aktif." };
+          state.users = state.users.filter(u => u.user_id !== payload.user_id);
+          return { status: "success", message: "Akun admin dihapus." };
+        }
+
+        default:
+          return { status: "error", message: "Endpoint tidak dikenal." };
+      }
+    }
+
+    // ==========================================
+    // SINKRONISASI & AUTHENTICATION
+    // ==========================================
+    async function refreshData() {
+      setLoading(true, "Memuat data kas & iuran...");
+      try {
+        const res = await apiRequest("getInitialData", {}, "GET");
+        if (res.data) {
+          if (res.data.settings) state.settings = { ...state.settings, ...res.data.settings };
+          if (Array.isArray(res.data.members)) state.members = res.data.members;
+          if (Array.isArray(res.data.transactions)) state.transactions = res.data.transactions;
+          if (Array.isArray(res.data.users)) state.users = res.data.users;
+          if (state.settings.tahun_aktif && !state.selectedYear) {
+            state.selectedYear = String(state.settings.tahun_aktif);
+          }
+        }
+        updateShellUI();
+        renderCurrentPage();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function handleAuthButtonClick() {
+      if (state.session) {
+        openModal(
+          "Konfirmasi Keluar",
+          `<p style="font-size: 14px; color: var(--text-muted);">Anda sedang masuk sebagai <strong>${escapeHTML(state.session.nama_lengkap)}</strong> (${escapeHTML(state.session.role)}). Keluar dari mode kelola?</p>`,
+          `<button class="btn btn-outline" onclick="closeModal()">Batal</button>
+           <button class="btn btn-danger" onclick="performLogout()">Ya, Keluar</button>`
+        );
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function openLoginModal() {
+      const previewHint = IS_PREVIEW
+        ? `<div style="background: var(--primary-soft); border: 1px solid var(--primary-light); padding: 10px 12px; border-radius: 8px; font-size: 12.5px; color: var(--primary);">
+             <strong>Info Mode Preview:</strong> Gunakan username <code class="mono">admin</code> dan password <code class="mono">123456</code> untuk menguji fitur CRUD Admin.
+           </div>`
+        : "";
+
+      openModal(
+        "Login Pengelola / Admin",
+        `${previewHint}
+         <form id="login-form" onsubmit="submitLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
+           <div class="form-group">
+             <label>Username</label>
+             <input type="text" id="login-username" class="input-control" placeholder="Masukkan username admin" required autocomplete="username" />
+           </div>
+           <div class="form-group">
+             <label>Password</label>
+             <input type="password" id="login-password" class="input-control" placeholder="Masukkan password" required autocomplete="current-password" />
+           </div>
+           <button type="submit" class="btn btn-primary" style="width:100%; margin-top:4px;">Masuk Sekarang</button>
+         </form>`
+      );
+      setTimeout(() => document.getElementById("login-username")?.focus(), 100);
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      if (!username || !password) return;
+
+      setLoading(true, "Memverifikasi kredensial...");
+      try {
+        const res = await apiRequest("login", { username, password }, "POST");
+        state.session = res.data;
+        localStorage.setItem("dansos_session", JSON.stringify(res.data));
+        closeModal();
+        showToast(`Selamat datang, ${res.data.nama_lengkap}!`, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function performLogout() {
+      setLoading(true, "Mengakhiri sesi...");
+      try {
+        await apiRequest("logout", {}, "POST");
+      } catch (_) {}
+      state.session = null;
+      localStorage.removeItem("dansos_session");
+      closeModal();
+      showToast("Anda telah keluar dari mode Admin.", "info");
+      await refreshData();
+    }
+
+    function updateShellUI() {
+      document.getElementById("sidebar-school-name").textContent = state.settings.nama_sekolah || "Sekolah";
+      document.getElementById("sidebar-year-label").textContent = state.selectedYear;
+
+      const connLabel = document.getElementById("connection-status-label");
+      connLabel.innerHTML = IS_PREVIEW
+        ? `<span class="status-dot preview"></span>Mode Preview`
+        : `<span class="status-dot live"></span>Terhubung GAS`;
+
+      const roleChip = document.getElementById("topbar-role-chip");
+      const topAuthBtn = document.getElementById("topbar-auth-btn");
+      const sideAuthBtn = document.getElementById("sidebar-auth-btn");
+
+      if (isAdmin()) {
+        roleChip.className = "role-chip admin";
+        roleChip.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Admin</span>`;
+        topAuthBtn.textContent = "Keluar";
+        topAuthBtn.className = "btn btn-soft-danger btn-sm";
+        sideAuthBtn.textContent = `Keluar (${state.session.username})`;
+        sideAuthBtn.className = "btn btn-soft-danger";
+      } else {
+        roleChip.className = "role-chip guest";
+        roleChip.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span class="hide-xs">Mode Pantau</span>`;
+        topAuthBtn.textContent = "Login Admin";
+        topAuthBtn.className = "btn btn-primary btn-sm";
+        sideAuthBtn.textContent = "Login Admin";
+        sideAuthBtn.className = "btn btn-primary";
+      }
+
+      // Hitung anggota belum bayar bulan berjalan
+      const curYM = getCurrentYM();
+      const activeMembers = state.members.filter(m => m.status === "Aktif");
+      const unpaidCount = activeMembers.filter(m => !hasPaidMonth(m.member_id, curYM)).length;
+      const badgeEl = document.getElementById("badge-unpaid-count");
+      if (badgeEl) {
+        badgeEl.textContent = unpaidCount;
+        badgeEl.style.display = unpaidCount > 0 ? "inline-block" : "none";
+      }
+      const bnavBadgeEl = document.getElementById("bnav-badge-unpaid");
+      if (bnavBadgeEl) {
+        bnavBadgeEl.textContent = unpaidCount > 99 ? "99+" : unpaidCount;
+        bnavBadgeEl.style.display = unpaidCount > 0 ? "inline-flex" : "none";
+      }
+    }
+
+    function navigateTo(page) {
+      state.currentPage = page;
+      document.querySelectorAll(".nav-btn, .bnav-item").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.page === page);
+      });
+      renderCurrentPage();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderCurrentPage() {
+      const titles = {
+        dashboard: ["DANA SOSIAL TELADAN", `${state.settings.nama_sekolah} • Tahun Buku ${state.selectedYear}`],
+        members: ["Manajemen Anggota & Iuran", "Monitoring status kepesertaan & matriks pembayaran bulanan"],
+        transactions: ["Transaksi & Mutasi Kas", "Pencatatan pemasukan iuran dan penyaluran dana sosial"],
+        reports: ["Laporan & Transparansi", "Rekapitulasi keuangan resmi siap cetak & unduh"],
+        admin: ["Pengaturan & CRUD Admin", "Kelola data anggota, konfigurasi sekolah, dan akun admin"]
+      };
+
+      const [t, sub] = titles[state.currentPage] || titles.dashboard;
+      document.getElementById("topbar-title").textContent = t;
+      document.getElementById("topbar-subtitle").textContent = sub;
+
+      const container = document.getElementById("main-view");
+      switch (state.currentPage) {
+        case "dashboard":
+          container.innerHTML = renderDashboardView();
+          break;
+        case "members":
+          container.innerHTML = renderMembersView();
+          break;
+        case "transactions":
+          container.innerHTML = renderTransactionsView();
+          break;
+        case "reports":
+          container.innerHTML = renderReportsView();
+          break;
+        case "admin":
+          container.innerHTML = renderAdminView();
+          break;
+      }
+    }
+
+    // ==========================================
+    // KALKULASI DATA KEUANGAN
+    // ==========================================
+    function hasPaidMonth(memberId, ym) {
+      return state.transactions.some(
+        t => t.jenis === "Masuk" && t.kategori === "Iuran Rutin" && t.member_id === memberId && t.periode_bulan === ym
+      );
+    }
+
+    function getTransactionForMonth(memberId, ym) {
+      return state.transactions.find(
+        t => t.jenis === "Masuk" && t.kategori === "Iuran Rutin" && t.member_id === memberId && t.periode_bulan === ym
+      );
+    }
+
+    function computeFinancialStats() {
+      const totalInAll = state.transactions
+        .filter(t => t.jenis === "Masuk")
+        .reduce((acc, t) => acc + (Number(t.nominal) || 0), 0);
+
+      const totalOutAll = state.transactions
+        .filter(t => t.jenis === "Keluar")
+        .reduce((acc, t) => acc + (Number(t.nominal) || 0), 0);
+
+      const saldoKas = totalInAll - totalOutAll;
+
+      const curYM = getCurrentYM();
+      const inThisMonth = state.transactions
+        .filter(t => t.jenis === "Masuk" && String(t.tanggal).startsWith(curYM))
+        .reduce((acc, t) => acc + (Number(t.nominal) || 0), 0);
+
+      const outThisMonth = state.transactions
+        .filter(t => t.jenis === "Keluar" && String(t.tanggal).startsWith(curYM))
+        .reduce((acc, t) => acc + (Number(t.nominal) || 0), 0);
+
+      const activeMembers = state.members.filter(m => m.status === "Aktif");
+      const paidMembersCount = activeMembers.filter(m => hasPaidMonth(m.member_id, curYM)).length;
+      const compliancePct = activeMembers.length > 0 ? Math.round((paidMembersCount / activeMembers.length) * 100) : 0;
+
+      // Data bulanan tahun terpilih untuk grafik
+      const monthlySeries = MONTHS_ID.map(m => {
+        const ym = `${state.selectedYear}-${m.num}`;
+        const masuk = state.transactions
+          .filter(t => t.jenis === "Masuk" && String(t.tanggal).startsWith(ym))
+          .reduce((a, b) => a + (Number(b.nominal) || 0), 0);
+        const keluar = state.transactions
+          .filter(t => t.jenis === "Keluar" && String(t.tanggal).startsWith(ym))
+          .reduce((a, b) => a + (Number(b.nominal) || 0), 0);
+        return { label: m.short, ym, masuk, keluar };
+      });
+
+      return {
+        totalInAll,
+        totalOutAll,
+        saldoKas,
+        curYM,
+        inThisMonth,
+        outThisMonth,
+        activeCount: activeMembers.length,
+        paidMembersCount,
+        compliancePct,
+        monthlySeries
+      };
+    }
+
+    // ==========================================
+    // 1. MENU UTAMA (DASHBOARD)
+    // ==========================================
+    function renderDashboardView() {
+      const stats = computeFinancialStats();
+      const recentTrxs = [...state.transactions]
+        .sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)))
+        .slice(0, 6);
+
+      const heroQuickBtns = isAdmin()
+        ? `<button class="btn btn-hero-light" onclick="openIuranModal()">+ Catat Iuran</button>
+           <button class="btn btn-hero-glass" onclick="openTransactionModal('Keluar')">+ Catat Penyaluran</button>`
+        : `<button class="btn btn-hero-light" onclick="navigateTo('members')">Cek Status Iuran</button>
+           <button class="btn btn-hero-glass" onclick="navigateTo('reports')">Laporan Resmi</button>`;
+
+      // Bangun SVG Motion Graphic Chart Responsif & Interaktif
+      const maxVal = Math.max(...stats.monthlySeries.map(d => Math.max(d.masuk, d.keluar)), 100000);
+      const chartH = 224;
+      const topPad = 20;
+      const bottomPad = 28;
+      const leftPad = 48;
+      const plotH = chartH - topPad - bottomPad;
+      const yBase = chartH - bottomPad;
+      const barGroupW = 54;
+      const svgW = leftPad + MONTHS_ID.length * barGroupW + 14;
+
+      const formatCompactRp = (v) => {
+        if (v <= 0) return "0";
+        if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, "") + "jt";
+        if (v >= 1000) return Math.round(v / 1000) + "rb";
+        return String(v);
+      };
+
+      const gridLinesSVG = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
+        const y = Math.round(yBase - ratio * plotH);
+        const val = Math.round(maxVal * ratio);
+        return `
+          <g>
+            <line x1="${leftPad}" y1="${y}" x2="${svgW - 10}" y2="${y}" stroke="${ratio === 0 ? '#94a3b8' : '#e2e8f0'}" stroke-width="${ratio === 0 ? '1.4' : '1'}" ${ratio > 0 ? 'stroke-dasharray="4 4"' : ''} />
+            <text x="${leftPad - 8}" y="${y + 4}" text-anchor="end" font-size="10" font-weight="600" fill="#64748b">${formatCompactRp(val)}</text>
+          </g>
+        `;
+      }).join("");
+
+      const curMonthIdx = Math.max(0, Math.min(11, parseInt(stats.curYM.split("-")[1], 10) - 1));
+      window._chartSeriesCache = stats.monthlySeries;
+
+      const trendPoints = [];
+      const barsSVG = stats.monthlySeries.map((d, idx) => {
+        const xBase = leftPad + 10 + idx * barGroupW;
+        const hIn = d.masuk > 0 ? Math.max(Math.round((d.masuk / maxVal) * plotH), 5) : 2;
+        const hOut = d.keluar > 0 ? Math.max(Math.round((d.keluar / maxVal) * plotH), 5) : 2;
+        const yIn = yBase - hIn;
+        const yOut = yBase - hOut;
+        const xCenter = xBase + 17;
+        trendPoints.push({ x: xCenter, y: yIn, idx, d });
+
+        const delayIn = idx * 55;
+        const delayOut = idx * 55 + 90;
+        const isCurrent = idx === curMonthIdx;
+
+        return `
+          <g class="chart-col-group ${isCurrent ? 'active-col' : ''}" data-idx="${idx}" onmouseenter="highlightChartMonth(${idx})" onclick="highlightChartMonth(${idx})">
+            <title>${d.label} ${state.selectedYear} — Masuk: ${formatRupiah(d.masuk)} | Keluar: ${formatRupiah(d.keluar)}</title>
+            <rect class="chart-hover-bg" x="${xBase - 6}" y="${topPad - 6}" width="${barGroupW - 6}" height="${plotH + 10}" rx="8" />
+            <rect class="chart-bar-anim" style="animation-delay:${delayIn}ms;" x="${xBase}" y="${yIn}" width="16" height="${hIn}" rx="4" fill="url(#gradMasuk)" />
+            <rect class="chart-bar-anim" style="animation-delay:${delayOut}ms;" x="${xBase + 19}" y="${yOut}" width="16" height="${hOut}" rx="4" fill="url(#gradKeluar)" />
+            <text x="${xCenter}" y="${chartH - 8}" text-anchor="middle" font-size="11" font-weight="${isCurrent ? '800' : '600'}" fill="${isCurrent ? '#0f766e' : '#64748b'}">${d.label}</text>
+          </g>
+        `;
+      }).join("");
+
+      // Kurva Tren Halus (Cubic Bezier Motion Path)
+      let trendPathD = "";
+      let trendAreaD = "";
+      if (trendPoints.length > 0) {
+        trendPathD = `M ${trendPoints[0].x} ${trendPoints[0].y}`;
+        for (let i = 0; i < trendPoints.length - 1; i++) {
+          const p0 = trendPoints[i];
+          const p1 = trendPoints[i + 1];
+          const midX = (p0.x + p1.x) / 2;
+          trendPathD += ` C ${midX} ${p0.y}, ${midX} ${p1.y}, ${p1.x} ${p1.y}`;
+        }
+        const firstP = trendPoints[0];
+        const lastP = trendPoints[trendPoints.length - 1];
+        trendAreaD = `${trendPathD} L ${lastP.x} ${yBase} L ${firstP.x} ${yBase} Z`;
+      }
+
+      const trendDotsSVG = trendPoints.map((pt, idx) => {
+        const isCurrent = idx === curMonthIdx;
+        const dotDelay = 450 + idx * 55;
+        return `
+          <g style="pointer-events:none;">
+            ${isCurrent ? `<circle class="chart-pulse-ring" cx="${pt.x}" cy="${pt.y}" r="7" fill="none" stroke="#0f766e" stroke-width="2" />` : ""}
+            <circle class="chart-dot" style="animation-delay:${dotDelay}ms;" cx="${pt.x}" cy="${pt.y}" r="${isCurrent ? '4.5' : '3'}" fill="#ffffff" stroke="#0f766e" stroke-width="2.2" />
+          </g>
+        `;
+      }).join("");
+
+      const activePoint = stats.monthlySeries[curMonthIdx] || { label: "-", ym: stats.curYM, masuk: 0, keluar: 0 };
+      const activeNet = activePoint.masuk - activePoint.keluar;
+
+      const recentHTML = recentTrxs.length === 0
+        ? `<p style="color:var(--text-muted); font-size:13.5px; text-align:center; padding:24px 0;">Belum ada transaksi tercatat.</p>`
+        : recentTrxs.map(t => {
+            const isIn = t.jenis === "Masuk";
+            const actor = t.member_id ? getMemberName(t.member_id) : t.kategori;
+            return `
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">
+                <div style="min-width:0; flex:1;">
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span class="badge ${isIn ? 'badge-success' : 'badge-danger'}">${escapeHTML(t.kategori)}</span>
+                    <span style="font-size:11.5px; color:var(--text-muted);">${formatDateID(t.tanggal)}</span>
+                  </div>
+                  <div style="font-weight:700; font-size:13.5px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${escapeHTML(actor)}
+                  </div>
+                  <div style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${escapeHTML(t.keterangan)}
+                  </div>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                  <div class="tabular-nums" style="font-weight:800; font-size:14px; color:${isIn ? 'var(--success)' : 'var(--danger)'};">
+                    ${isIn ? '+' : '-'} ${formatRupiah(t.nominal)}
+                  </div>
+                  ${isIn
+                    ? `<button class="btn btn-xs btn-outline" style="margin-top:4px;" onclick="openReceiptModal('${t.trx_id}')">Kwitansi</button>`
+                    : (t.bukti_url ? `<a href="${escapeHTML(t.bukti_url)}" target="_blank" rel="noopener" class="btn btn-xs btn-outline" style="margin-top:4px;">Bukti</a>` : "")
+                  }
+                </div>
+              </div>
+            `;
+          }).join("");
+
+      return `
+        <section class="hero-banner">
+          <div class="hero-grid">
+            <div>
+              <div class="hero-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                SALDO KAS DANA SOSIAL TERKINI
+              </div>
+              <div class="hero-amount tabular-nums">${formatRupiah(stats.saldoKas)}</div>
+              <div class="hero-meta">
+                <span>Total Pemasukan: <strong class="tabular-nums">${formatRupiah(stats.totalInAll)}</strong></span>
+                <span>•</span>
+                <span>Total Penyaluran: <strong class="tabular-nums">${formatRupiah(stats.totalOutAll)}</strong></span>
+              </div>
+            </div>
+            <div class="hero-actions">
+              ${heroQuickBtns}
+            </div>
+          </div>
+        </section>
+
+        <section class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-title">Pemasukan (${formatPeriodeID(stats.curYM)})</span>
+              <div class="kpi-icon" style="background:var(--success-soft); color:var(--success);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value tabular-nums" style="color:var(--success);">${formatRupiah(stats.inThisMonth)}</div>
+            <div class="kpi-foot">Iuran rutin & donasi bulan ini</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-title">Penyaluran (${formatPeriodeID(stats.curYM)})</span>
+              <div class="kpi-icon" style="background:var(--danger-soft); color:var(--danger);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value tabular-nums" style="color:var(--danger);">${formatRupiah(stats.outThisMonth)}</div>
+            <div class="kpi-foot">Santunan & bantuan sosial</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-title">Kepatuhan Iuran</span>
+              <div class="kpi-icon" style="background:var(--primary-soft); color:var(--primary);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value tabular-nums">${stats.compliancePct}%</div>
+            <div class="kpi-foot">${stats.paidMembersCount} dari ${stats.activeCount} anggota lunas</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-title">Anggota Aktif</span>
+              <div class="kpi-icon" style="background:var(--secondary-soft); color:var(--secondary);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value tabular-nums">${stats.activeCount} Orang</div>
+            <div class="kpi-foot">Iuran standar ${formatRupiah(state.settings.nominal_default)}/bln</div>
+          </div>
+        </section>
+
+        <section class="dash-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Arus Kas Bulanan (${state.selectedYear})</h3>
+                <p class="card-subtitle">Perbandingan pemasukan iuran vs penyaluran dana sosial</p>
+              </div>
+              <div style="display:flex; gap:12px; font-size:12px; font-weight:700; align-items:center;">
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#0f766e;"></span>Masuk</span>
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:10px;height:10px;border-radius:3px;background:#e11d48;"></span>Keluar</span>
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:12px;height:2.5px;border-radius:2px;background:#0d9488;"></span>Tren</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-live-bar" id="chart-live-inspector">
+                <span><strong>${formatPeriodeID(activePoint.ym)}</strong> <span style="color:var(--text-light);">• Ketuk/arahkan ke bulan</span></span>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;" class="tabular-nums">
+                  <span style="color:var(--success); font-weight:700;">Masuk: ${formatRupiah(activePoint.masuk)}</span>
+                  <span style="color:var(--danger); font-weight:700;">Keluar: ${formatRupiah(activePoint.keluar)}</span>
+                  <span style="color:var(--primary); font-weight:800;">Net: ${activeNet >= 0 ? '+' : ''}${formatRupiah(activeNet)}</span>
+                </div>
+              </div>
+              <div class="chart-box">
+                <svg width="${svgW}" height="${chartH}" viewBox="0 0 ${svgW} ${chartH}" style="display:block; margin:0 auto;">
+                  <defs>
+                    <linearGradient id="gradMasuk" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#14b8a6" />
+                      <stop offset="100%" stop-color="#0f766e" />
+                    </linearGradient>
+                    <linearGradient id="gradKeluar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#fb7185" />
+                      <stop offset="100%" stop-color="#e11d48" />
+                    </linearGradient>
+                    <linearGradient id="gradTrendArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#0f766e" stop-opacity="0.16" />
+                      <stop offset="100%" stop-color="#0f766e" stop-opacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  ${gridLinesSVG}
+                  ${trendAreaD ? `<path class="chart-trend-area" d="${trendAreaD}" fill="url(#gradTrendArea)" style="pointer-events:none;" />` : ""}
+                  ${barsSVG}
+                  ${trendPathD ? `<path class="chart-trend-line" d="${trendPathD}" fill="none" stroke="#0f766e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;" />` : ""}
+                  ${trendDotsSVG}
+                </svg>
+              </div>
+              <div style="margin-top:14px; padding:12px 14px; background:var(--bg-app); border:1px solid var(--border); border-radius:10px; font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <span><strong>Rekening Kas:</strong> ${escapeHTML(state.settings.info_rekening)}</span>
+                <button class="btn btn-xs btn-soft-primary" onclick="navigateTo('transactions')">Lihat Semua Mutasi →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Mutasi Kas Terbaru</h3>
+                <p class="card-subtitle">6 aktivitas transaksi terakhir</p>
+              </div>
+              <button class="btn btn-xs btn-outline" onclick="navigateTo('transactions')">Semua</button>
+            </div>
+            <div class="card-body" style="padding-top:6px; padding-bottom:10px;">
+              ${recentHTML}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function highlightChartMonth(idx) {
+      const series = window._chartSeriesCache || [];
+      const item = series[idx];
+      if (!item) return;
+
+      document.querySelectorAll(".chart-col-group").forEach(el => {
+        el.classList.toggle("active-col", Number(el.dataset.idx) === idx);
+      });
+
+      const inspector = document.getElementById("chart-live-inspector");
+      if (inspector) {
+        const net = item.masuk - item.keluar;
+        inspector.innerHTML = `
+          <span><strong>${escapeHTML(formatPeriodeID(item.ym))}</strong> <span style="color:var(--text-light);">• Ketuk/arahkan ke bulan</span></span>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;" class="tabular-nums">
+            <span style="color:var(--success); font-weight:700;">Masuk: ${formatRupiah(item.masuk)}</span>
+            <span style="color:var(--danger); font-weight:700;">Keluar: ${formatRupiah(item.keluar)}</span>
+            <span style="color:var(--primary); font-weight:800;">Net: ${net >= 0 ? "+" : ""}${formatRupiah(net)}</span>
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================
+    // 2. MANAJEMEN ANGGOTA & MATRIKS IURAN
+    // ==========================================
+    function renderMembersView() {
+      const curYM = getCurrentYM();
+      const units = ["ALL", ...new Set(state.members.map(m => m.unit_kelompok).filter(Boolean))];
+
+      const filteredMembers = state.members.filter(m => {
+        if (m.status !== "Aktif") return false;
+        const matchSearch =
+          m.nama.toLowerCase().includes(state.memberSearch.toLowerCase()) ||
+          String(m.kode_anggota).toLowerCase().includes(state.memberSearch.toLowerCase());
+        const matchUnit = state.memberUnitFilter === "ALL" || m.unit_kelompok === state.memberUnitFilter;
+        const paidNow = hasPaidMonth(m.member_id, curYM);
+        const matchStatus =
+          state.memberStatusFilter === "ALL" ||
+          (state.memberStatusFilter === "PAID" && paidNow) ||
+          (state.memberStatusFilter === "UNPAID" && !paidNow);
+        return matchSearch && matchUnit && matchStatus;
+      });
+
+      const currentMonthNum = parseInt(curYM.split("-")[1], 10);
+
+      const adminHeaderTools = isAdmin()
+        ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">
+             <button class="btn btn-wa btn-sm" onclick="openReminderListModal()">
+               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+               Rekap Reminder WA
+             </button>
+             <button class="btn btn-primary btn-sm" onclick="openIuranModal()">+ Catat Iuran</button>
+           </div>`
+        : "";
+
+      let contentHTML = "";
+      if (state.memberViewMode === "matrix") {
+        const rows = filteredMembers.map((m, idx) => {
+          let paidCountYear = 0;
+          const cells = MONTHS_ID.map((mo, mIdx) => {
+            const ym = `${state.selectedYear}-${mo.num}`;
+            const trx = getTransactionForMonth(m.member_id, ym);
+            if (trx) paidCountYear++;
+            const isOverdue = !trx && (mIdx + 1) <= currentMonthNum && state.selectedYear === String(state.settings.tahun_aktif);
+            const cls = trx ? "paid" : isOverdue ? "overdue" : "unpaid";
+            const symbol = trx ? "✓" : isOverdue ? "!" : "·";
+            const onClickAction = trx
+              ? `openReceiptModal('${trx.trx_id}')`
+              : isAdmin()
+                ? `openIuranModal('${m.member_id}', '${ym}')`
+                : `openMemberDetailModal('${m.member_id}')`;
+
+            return `<td style="text-align:center; padding:8px 4px;">
+              <button class="matrix-cell ${cls}" onclick="${onClickAction}" title="${mo.name} ${state.selectedYear}: ${trx ? 'Lunas (Klik untuk kwitansi)' : 'Belum bayar'}">${symbol}</button>
+            </td>`;
+          }).join("");
+
+          return `
+            <tr>
+              <td class="tabular-nums" style="color:var(--text-muted);">${idx + 1}</td>
+              <td>
+                <div style="font-weight:700; color:var(--text-main); cursor:pointer;" onclick="openMemberDetailModal('${m.member_id}')">${escapeHTML(m.nama)}</div>
+                <div style="font-size:11.5px; color:var(--text-muted);">${escapeHTML(m.unit_kelompok)} • ${formatRupiah(m.nominal_iuran)}/bln</div>
+              </td>
+              ${cells}
+              <td class="tabular-nums" style="text-align:right; font-weight:700; color:var(--primary);">
+                ${paidCountYear}/12 Bln
+              </td>
+              <td style="text-align:right;">
+                <button class="btn btn-xs btn-outline" onclick="openMemberDetailModal('${m.member_id}')">Detail</button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        contentHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px;">No</th>
+                  <th>Nama Anggota</th>
+                  ${MONTHS_ID.map(m => `<th style="text-align:center; padding:10px 4px;">${m.short}</th>`).join("")}
+                  <th style="text-align:right;">Capaian</th>
+                  <th style="text-align:right;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows || `<tr><td colspan="16" style="text-align:center; padding:24px; color:var(--text-muted);">Tidak ada anggota yang sesuai filter.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--text-muted);">
+            <span><strong style="color:var(--success);">✓ Hijau:</strong> Lunas (Klik untuk lihat kwitansi)</span>
+            <span><strong style="color:var(--warning);">! Kuning:</strong> Belum bayar s.d. bulan berjalan</span>
+            <span><strong>· Abu:</strong> Periode mendatang</span>
+          </div>
+        `;
+      } else {
+        // Mobile-First Card View
+        const cards = filteredMembers.map(m => {
+          const paidNow = hasPaidMonth(m.member_id, curYM);
+          const miniTags = MONTHS_ID.map((mo, mIdx) => {
+            const ym = `${state.selectedYear}-${mo.num}`;
+            const trx = getTransactionForMonth(m.member_id, ym);
+            const isOverdue = !trx && (mIdx + 1) <= currentMonthNum && state.selectedYear === String(state.settings.tahun_aktif);
+            const bg = trx ? "var(--success-soft); color:var(--success);" : isOverdue ? "var(--warning-soft); color:var(--warning);" : "#f1f5f9; color:#94a3b8;";
+            return `<div class="mini-m-tag" style="background:${bg}">${mo.short}</div>`;
+          }).join("");
+
+          return `
+            <div class="item-card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                <div>
+                  <div style="font-weight:800; font-size:14.5px;">${escapeHTML(m.nama)}</div>
+                  <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(m.unit_kelompok)} • Iuran ${formatRupiah(m.nominal_iuran)}</div>
+                </div>
+                <span class="badge ${paidNow ? 'badge-success' : 'badge-warning'}">
+                  ${paidNow ? 'Lunas Bln Ini' : 'Belum Bayar'}
+                </span>
+              </div>
+              <div class="mini-months">${miniTags}</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border); gap:8px;">
+                <button class="btn btn-xs btn-outline" onclick="openMemberDetailModal('${m.member_id}')">Riwayat & Rincian</button>
+                ${isAdmin()
+                  ? `<div style="display:flex; gap:6px;">
+                       ${!paidNow ? `<button class="btn btn-xs btn-wa" onclick="sendWhatsAppReminder('${m.member_id}')">WA</button>` : ""}
+                       <button class="btn btn-xs btn-primary" onclick="openIuranModal('${m.member_id}', '${curYM}')">+ Bayar</button>
+                     </div>`
+                  : ""
+                }
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        contentHTML = `<div class="mobile-cards-grid">${cards || `<p style="color:var(--text-muted);">Tidak ada data anggota.</p>`}</div>`;
+      }
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Status Iuran Anggota (${state.selectedYear})</h3>
+              <p class="card-subtitle">Menampilkan ${filteredMembers.length} anggota aktif</p>
+            </div>
+            ${adminHeaderTools}
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="input-control" placeholder="Cari nama atau NIP..." value="${escapeHTML(state.memberSearch)}" oninput="state.memberSearch=this.value; renderCurrentPage();" />
+              </div>
+
+              <select class="select-control" onchange="state.selectedYear=this.value; renderCurrentPage();">
+                <option value="2025" ${state.selectedYear === "2025" ? "selected" : ""}>Tahun 2025</option>
+                <option value="2026" ${state.selectedYear === "2026" ? "selected" : ""}>Tahun 2026</option>
+                <option value="2027" ${state.selectedYear === "2027" ? "selected" : ""}>Tahun 2027</option>
+              </select>
+
+              <select class="select-control" onchange="state.memberUnitFilter=this.value; renderCurrentPage();">
+                ${units.map(u => `<option value="${escapeHTML(u)}" ${state.memberUnitFilter === u ? "selected" : ""}>${u === "ALL" ? "Semua Unit" : escapeHTML(u)}</option>`).join("")}
+              </select>
+
+              <select class="select-control" onchange="state.memberStatusFilter=this.value; renderCurrentPage();">
+                <option value="ALL" ${state.memberStatusFilter === "ALL" ? "selected" : ""}>Semua Status</option>
+                <option value="PAID" ${state.memberStatusFilter === "PAID" ? "selected" : ""}>Lunas Bulan Ini</option>
+                <option value="UNPAID" ${state.memberStatusFilter === "UNPAID" ? "selected" : ""}>Belum Bayar Bulan Ini</option>
+              </select>
+
+              <div style="display:flex; border:1px solid var(--border-strong); border-radius:8px; overflow:hidden;">
+                <button class="btn btn-xs ${state.memberViewMode === 'cards' ? 'btn-primary' : 'btn-outline'}" style="border:none; border-radius:0;" onclick="state.memberViewMode='cards'; renderCurrentPage();">Kartu</button>
+                <button class="btn btn-xs ${state.memberViewMode === 'matrix' ? 'btn-primary' : 'btn-outline'}" style="border:none; border-radius:0;" onclick="state.memberViewMode='matrix'; renderCurrentPage();">Matriks 12 Bln</button>
+              </div>
+            </div>
+
+            ${contentHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    function openMemberDetailModal(memberId) {
+      const m = state.members.find(x => x.member_id === memberId);
+      if (!m) return;
+      const curYM = getCurrentYM();
+      const curMo = parseInt(curYM.split("-")[1], 10);
+
+      const unpaidMonths = [];
+      const gridItems = MONTHS_ID.map((mo, idx) => {
+        const ym = `${state.selectedYear}-${mo.num}`;
+        const trx = getTransactionForMonth(m.member_id, ym);
+        if (!trx && (idx + 1) <= curMo && state.selectedYear === String(state.settings.tahun_aktif)) {
+          unpaidMonths.push(mo.name);
+        }
+        return `
+          <div style="padding:8px; border-radius:8px; border:1px solid ${trx ? '#a7f3d0' : 'var(--border)'}; background:${trx ? 'var(--success-soft)' : '#f8fafc'}; text-align:center;">
+            <div style="font-size:11.5px; font-weight:700;">${mo.short}</div>
+            <div style="font-size:11px; color:${trx ? 'var(--success)' : 'var(--text-muted)'}; margin-top:2px;">
+              ${trx ? "Lunas" : "Belum"}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const memberTrxs = state.transactions
+        .filter(t => t.member_id === m.member_id)
+        .sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)));
+
+      const footer = isAdmin()
+        ? `<button class="btn btn-outline" onclick="closeModal()">Tutup</button>
+           ${unpaidMonths.length > 0 ? `<button class="btn btn-wa" onclick="sendWhatsAppReminder('${m.member_id}')">Kirim Reminder WA (${unpaidMonths.length} Bln)</button>` : ""}
+           <button class="btn btn-primary" onclick="openIuranModal('${m.member_id}')">+ Catat Iuran</button>`
+        : `<button class="btn btn-primary" onclick="closeModal()">Tutup</button>`;
+
+      openModal(
+        `Rincian Iuran Anggota`,
+        `
+          <div style="background:var(--bg-app); padding:14px; border-radius:12px; border:1px solid var(--border);">
+            <div style="font-weight:800; font-size:16px;">${escapeHTML(m.nama)}</div>
+            <div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
+              NIP/Kode: <span class="mono">${escapeHTML(m.kode_anggota || "-")}</span> • Unit: ${escapeHTML(m.unit_kelompok)}
+            </div>
+            <div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
+              No. WA: <span class="mono">${escapeHTML(maskPhone(m.no_wa))}</span> • Iuran Wajib: <strong>${formatRupiah(m.nominal_iuran)}/bln</strong>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; margin-bottom:8px;">Status Pembayaran Tahun ${state.selectedYear}</div>
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+              ${gridItems}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; margin-bottom:6px;">Riwayat Transaksi Terkait (${memberTrxs.length})</div>
+            <div style="max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              ${memberTrxs.length === 0
+                ? `<p style="font-size:12.5px; color:var(--text-muted); padding:12px 0;">Belum ada riwayat transaksi.</p>`
+                : memberTrxs.map(t => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.5px;">
+                      <div>
+                        <strong>${escapeHTML(t.kategori)}</strong> (${formatPeriodeID(t.periode_bulan)})
+                        <div style="font-size:11px; color:var(--text-muted);">${formatDateID(t.tanggal)}</div>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <strong class="tabular-nums">${formatRupiah(t.nominal)}</strong>
+                        ${t.jenis === "Masuk" ? `<button class="btn btn-xs btn-outline" onclick="openReceiptModal('${t.trx_id}')">Kwitansi</button>` : ""}
+                      </div>
+                    </div>
+                  `).join("")
+              }
+            </div>
+          </div>
+        `,
+        footer
+      );
+    }
+
+    // ==========================================
+    // 3. TRANSAKSI & PEMBAYARAN
+    // ==========================================
+    function renderTransactionsView() {
+      const allCats = ["ALL", ...TRX_CATEGORIES.Masuk, ...TRX_CATEGORIES.Keluar];
+      const filtered = state.transactions
+        .filter(t => {
+          const q = state.trxSearch.toLowerCase();
+          const mName = getMemberName(t.member_id).toLowerCase();
+          const matchQ =
+            t.keterangan.toLowerCase().includes(q) ||
+            t.trx_id.toLowerCase().includes(q) ||
+            mName.includes(q);
+          const matchType = state.trxTypeFilter === "ALL" || t.jenis === state.trxTypeFilter;
+          const matchCat = state.trxCatFilter === "ALL" || t.kategori === state.trxCatFilter;
+          const matchMonth = state.trxMonthFilter === "ALL" || String(t.tanggal).startsWith(`${state.selectedYear}-${state.trxMonthFilter}`);
+          return matchQ && matchType && matchCat && matchMonth;
+        })
+        .sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)));
+
+      const sumIn = filtered.filter(t => t.jenis === "Masuk").reduce((a, b) => a + (Number(b.nominal) || 0), 0);
+      const sumOut = filtered.filter(t => t.jenis === "Keluar").reduce((a, b) => a + (Number(b.nominal) || 0), 0);
+
+      const adminActionBtns = isAdmin()
+        ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">
+             <button class="btn btn-primary btn-sm" onclick="openIuranModal()">+ Catat Iuran</button>
+             <button class="btn btn-outline btn-sm" onclick="openTransactionModal('Masuk')">+ Pemasukan Lain</button>
+             <button class="btn btn-danger btn-sm" onclick="openTransactionModal('Keluar')">+ Catat Pengeluaran</button>
+           </div>`
+        : "";
+
+      const isMobile = window.innerWidth < 860;
+      let listHTML = "";
+
+      if (isMobile) {
+        listHTML = `<div class="mobile-cards-grid">` + (filtered.map(t => {
+          const isIn = t.jenis === "Masuk";
+          const subject = t.member_id ? getMemberName(t.member_id) : t.kategori;
+          return `
+            <div class="item-card ${isIn ? 'trx-card-masuk' : 'trx-card-keluar'}">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <span class="badge ${isIn ? 'badge-success' : 'badge-danger'}">${escapeHTML(t.kategori)}</span>
+                <span class="mono" style="font-size:11px; color:var(--text-muted);">${escapeHTML(t.trx_id)}</span>
+              </div>
+              <div>
+                <div style="font-weight:800; font-size:14.5px;">${escapeHTML(subject)}</div>
+                <div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">${escapeHTML(t.keterangan)}</div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border);">
+                <div>
+                  <div style="font-size:11px; color:var(--text-muted);">${formatDateID(t.tanggal)} • Periode ${formatPeriodeID(t.periode_bulan)}</div>
+                  <div class="tabular-nums" style="font-weight:800; font-size:15px; color:${isIn ? 'var(--success)' : 'var(--danger)'};">
+                    ${isIn ? '+' : '-'} ${formatRupiah(t.nominal)}
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  ${isIn ? `<button class="btn btn-xs btn-soft-primary" onclick="openReceiptModal('${t.trx_id}')">Kwitansi</button>` : ""}
+                  ${t.bukti_url ? `<a href="${escapeHTML(t.bukti_url)}" target="_blank" rel="noopener" class="btn btn-xs btn-outline">Bukti</a>` : ""}
+                  ${isAdmin() ? `<button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteTransaction('${t.trx_id}')">Hapus</button>` : ""}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("") || `<p style="color:var(--text-muted);">Belum ada transaksi sesuai filter.</p>`) + `</div>`;
+      } else {
+        const rows = filtered.map(t => {
+          const isIn = t.jenis === "Masuk";
+          const subject = t.member_id ? getMemberName(t.member_id) : "-";
+          return `
+            <tr>
+              <td class="mono" style="font-size:12px;">${escapeHTML(t.trx_id)}</td>
+              <td style="white-space:nowrap;">${formatDateID(t.tanggal)}</td>
+              <td><span class="badge ${isIn ? 'badge-success' : 'badge-danger'}">${escapeHTML(t.kategori)}</span></td>
+              <td>
+                ${t.member_id ? `<div style="font-weight:700;">${escapeHTML(subject)}</div>` : ""}
+                <div style="font-size:12.5px; color:var(--text-muted);">${escapeHTML(t.keterangan)}</div>
+              </td>
+              <td style="white-space:nowrap;">${formatPeriodeID(t.periode_bulan)}</td>
+              <td class="tabular-nums" style="text-align:right; font-weight:800; color:${isIn ? 'var(--success)' : 'var(--danger)'}; white-space:nowrap;">
+                ${isIn ? '+' : '-'} ${formatRupiah(t.nominal)}
+              </td>
+              <td style="text-align:right; white-space:nowrap;">
+                ${isIn ? `<button class="btn btn-xs btn-soft-primary" onclick="openReceiptModal('${t.trx_id}')">Kwitansi</button>` : ""}
+                ${t.bukti_url ? `<a href="${escapeHTML(t.bukti_url)}" target="_blank" rel="noopener" class="btn btn-xs btn-outline">Bukti</a>` : ""}
+                ${isAdmin() ? `
+                  <button class="btn btn-xs btn-outline" onclick="openEditTransactionModal('${t.trx_id}')">Edit</button>
+                  <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteTransaction('${t.trx_id}')">Hapus</button>
+                ` : ""}
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        listHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID Transaksi</th>
+                  <th>Tanggal</th>
+                  <th>Kategori</th>
+                  <th>Anggota / Uraian</th>
+                  <th>Periode</th>
+                  <th style="text-align:right;">Nominal</th>
+                  <th style="text-align:right;">Dokumen & Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows || `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">Tidak ada data transaksi yang cocok.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Buku Kas & Mutasi Transaksi</h3>
+              <p class="card-subtitle">
+                Filter: <strong style="color:var(--success);">+${formatRupiah(sumIn)}</strong> | <strong style="color:var(--danger);">-${formatRupiah(sumOut)}</strong> (${filtered.length} transaksi)
+              </p>
+            </div>
+            ${adminActionBtns}
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="input-control" placeholder="Cari uraian, nama anggota, atau ID..." value="${escapeHTML(state.trxSearch)}" oninput="state.trxSearch=this.value; renderCurrentPage();" />
+              </div>
+
+              <select class="select-control" onchange="state.trxTypeFilter=this.value; renderCurrentPage();">
+                <option value="ALL" ${state.trxTypeFilter === "ALL" ? "selected" : ""}>Semua Jenis</option>
+                <option value="Masuk" ${state.trxTypeFilter === "Masuk" ? "selected" : ""}>Kas Masuk</option>
+                <option value="Keluar" ${state.trxTypeFilter === "Keluar" ? "selected" : ""}>Kas Keluar</option>
+              </select>
+
+              <select class="select-control" onchange="state.trxCatFilter=this.value; renderCurrentPage();">
+                ${allCats.map(c => `<option value="${escapeHTML(c)}" ${state.trxCatFilter === c ? "selected" : ""}>${c === "ALL" ? "Semua Kategori" : escapeHTML(c)}</option>`).join("")}
+              </select>
+
+              <select class="select-control" onchange="state.trxMonthFilter=this.value; renderCurrentPage();">
+                <option value="ALL" ${state.trxMonthFilter === "ALL" ? "selected" : ""}>Semua Bulan (${state.selectedYear})</option>
+                ${MONTHS_ID.map(m => `<option value="${m.num}" ${state.trxMonthFilter === m.num ? "selected" : ""}>${m.name}</option>`).join("")}
+              </select>
+            </div>
+
+            ${listHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal Catat Iuran Multi-Bulan
+    function openIuranModal(preMemberId = "", preYM = "") {
+      if (!isAdmin()) return openLoginModal();
+      const activeMembers = state.members.filter(m => m.status === "Aktif");
+      const defaultMember = activeMembers.find(m => m.member_id === preMemberId) || activeMembers[0];
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      openModal(
+        "Catat Pembayaran Iuran Anggota",
+        `
+          <form id="iuran-form" onsubmit="submitIuranForm(event)" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="form-group">
+              <label>Pilih Anggota</label>
+              <select id="iuran-member" class="select-control" required onchange="refreshIuranMonthCheckboxes('${preYM}')">
+                ${activeMembers.map(m => `<option value="${m.member_id}" ${defaultMember && m.member_id === defaultMember.member_id ? "selected" : ""}>${escapeHTML(m.nama)} (${escapeHTML(m.unit_kelompok)} — ${formatRupiah(m.nominal_iuran)})</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tanggal Setor</label>
+                <input type="date" id="iuran-date" class="input-control" value="${todayStr}" required />
+              </div>
+              <div class="form-group">
+                <label>Nominal per Bulan (Rp)</label>
+                <input type="number" id="iuran-nominal" class="input-control" value="${defaultMember ? defaultMember.nominal_iuran : state.settings.nominal_default}" min="1000" step="500" required oninput="updateIuranTotalPreview()" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label>Pilih Bulan Pembayaran (${state.selectedYear})</label>
+                <button type="button" class="btn btn-xs btn-soft-primary" onclick="selectUnpaidUpToNow()">Pilih Tunggakan s.d. Bln Ini</button>
+              </div>
+              <div class="month-picker-grid" id="iuran-month-grid"></div>
+              <div id="iuran-total-preview" style="font-size:12.5px; font-weight:700; color:var(--primary); margin-top:4px;">Total Bayar: Rp 0 (0 bulan)</div>
+            </div>
+
+            <div class="form-group">
+              <label>Catatan / Keterangan (Opsional)</label>
+              <input type="text" id="iuran-note" class="input-control" placeholder="Contoh: Transfer BSI / Tunai ke bendahara" />
+            </div>
+
+            <div class="form-group">
+              <label>Link Foto Bukti Transfer (Opsional)</label>
+              <input type="url" id="iuran-bukti" class="input-control" placeholder="https://drive.google.com/..." />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan Pembayaran Iuran</button>
+          </form>
+        `
+      );
+
+      refreshIuranMonthCheckboxes(preYM);
+    }
+
+    function refreshIuranMonthCheckboxes(preSelectYM = "") {
+      const memberId = document.getElementById("iuran-member")?.value;
+      const member = state.members.find(m => m.member_id === memberId);
+      if (member && document.getElementById("iuran-nominal")) {
+        document.getElementById("iuran-nominal").value = member.nominal_iuran;
+      }
+
+      const grid = document.getElementById("iuran-month-grid");
+      if (!grid) return;
+
+      grid.innerHTML = MONTHS_ID.map(mo => {
+        const ym = `${state.selectedYear}-${mo.num}`;
+        const paid = hasPaidMonth(memberId, ym);
+        const shouldCheck = !paid && (preSelectYM === ym || (!preSelectYM && ym === getCurrentYM()));
+        return `
+          <label class="month-check-item ${paid ? 'already-paid' : shouldCheck ? 'selected' : ''}" data-ym="${ym}">
+            <input type="checkbox" value="${ym}" ${paid ? "disabled" : ""} ${shouldCheck ? "checked" : ""} style="display:none;" onchange="toggleMonthCheckbox(this)" />
+            <span>${mo.short} ${paid ? "✓" : ""}</span>
+          </label>
+        `;
+      }).join("");
+
+      updateIuranTotalPreview();
+    }
+
+    function toggleMonthCheckbox(cb) {
+      cb.parentElement.classList.toggle("selected", cb.checked);
+      updateIuranTotalPreview();
+    }
+
+    function selectUnpaidUpToNow() {
+      const curMo = parseInt(getCurrentYM().split("-")[1], 10);
+      document.querySelectorAll("#iuran-month-grid input[type='checkbox']:not(:disabled)").forEach((cb, idx) => {
+        const moNum = parseInt(cb.value.split("-")[1], 10);
+        cb.checked = moNum <= curMo;
+        cb.parentElement.classList.toggle("selected", cb.checked);
+      });
+      updateIuranTotalPreview();
+    }
+
+    function updateIuranTotalPreview() {
+      const checked = Array.from(document.querySelectorAll("#iuran-month-grid input[type='checkbox']:checked"));
+      const perMonth = Number(document.getElementById("iuran-nominal")?.value) || 0;
+      const total = checked.length * perMonth;
+      const el = document.getElementById("iuran-total-preview");
+      if (el) {
+        el.textContent = `Total Bayar: ${formatRupiah(total)} (${checked.length} bulan dipilih)`;
+      }
+    }
+
+    async function submitIuranForm(e) {
+      e.preventDefault();
+      const member_id = document.getElementById("iuran-member").value;
+      const tanggal = document.getElementById("iuran-date").value;
+      const nominal_per_bulan = Number(document.getElementById("iuran-nominal").value);
+      const periode_list = Array.from(document.querySelectorAll("#iuran-month-grid input[type='checkbox']:checked")).map(cb => cb.value);
+      const keterangan = document.getElementById("iuran-note").value.trim();
+      const bukti_url = document.getElementById("iuran-bukti").value.trim();
+
+      if (periode_list.length === 0) {
+        showToast("Pilih minimal 1 bulan pembayaran.", "error");
+        return;
+      }
+
+      setLoading(true, "Menyimpan pembayaran iuran...");
+      try {
+        const res = await apiRequest("saveTransaction", {
+          jenis: "Masuk",
+          kategori: "Iuran Rutin",
+          member_id,
+          tanggal,
+          periode_list,
+          nominal_per_bulan,
+          nominal: nominal_per_bulan * periode_list.length,
+          keterangan,
+          bukti_url
+        }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Modal Transaksi Masuk Lainnya / Keluar (Penyaluran Dana Sosial)
+    function openTransactionModal(jenis = "Keluar", existingTrx = null) {
+      if (!isAdmin()) return openLoginModal();
+      const isEdit = Boolean(existingTrx);
+      const curJenis = existingTrx ? existingTrx.jenis : jenis;
+      const cats = TRX_CATEGORIES[curJenis] || TRX_CATEGORIES.Keluar;
+      const todayStr = existingTrx ? existingTrx.tanggal : new Date().toISOString().slice(0, 10);
+
+      openModal(
+        isEdit ? "Edit Transaksi" : (curJenis === "Keluar" ? "Catat Penyaluran / Pengeluaran Kas" : "Catat Pemasukan Lainnya"),
+        `
+          <form id="trx-form" onsubmit="submitTransactionForm(event, '${existingTrx ? existingTrx.trx_id : ""}')" style="display:flex; flex-direction:column; gap:13px;">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Jenis Transaksi</label>
+                <select id="trx-jenis" class="select-control" onchange="updateTrxCategories()">
+                  <option value="Keluar" ${curJenis === "Keluar" ? "selected" : ""}>Kas Keluar (Penyaluran)</option>
+                  <option value="Masuk" ${curJenis === "Masuk" ? "selected" : ""}>Kas Masuk (Donasi/Lainnya)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Kategori</label>
+                <select id="trx-kategori" class="select-control">
+                  ${cats.map(c => `<option value="${escapeHTML(c)}" ${existingTrx && existingTrx.kategori === c ? "selected" : ""}>${escapeHTML(c)}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tanggal Transaksi</label>
+                <input type="date" id="trx-tanggal" class="input-control" value="${todayStr}" required />
+              </div>
+              <div class="form-group">
+                <label>Nominal (Rp)</label>
+                <input type="number" id="trx-nominal" class="input-control" value="${existingTrx ? existingTrx.nominal : ""}" min="1000" step="500" placeholder="Contoh: 500000" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Anggota Terkait (Opsional — misal penerima santunan)</label>
+              <select id="trx-member" class="select-control">
+                <option value="">-- Umum / Bukan Anggota Tertentu --</option>
+                ${state.members.map(m => `<option value="${m.member_id}" ${existingTrx && existingTrx.member_id === m.member_id ? "selected" : ""}>${escapeHTML(m.nama)} (${escapeHTML(m.unit_kelompok)})</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Uraian / Keterangan Lengkap</label>
+              <textarea id="trx-keterangan" class="textarea-control" rows="2" placeholder="Contoh: Santunan sakit rawat inap Bapak/Ibu..." required>${existingTrx ? escapeHTML(existingTrx.keterangan) : ""}</textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Tautan Bukti Foto / Kwitansi (Opsional)</label>
+              <input type="url" id="trx-bukti" class="input-control" value="${existingTrx ? escapeHTML(existingTrx.bukti_url || "") : ""}" placeholder="https://drive.google.com/..." />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan Transaksi</button>
+          </form>
+        `
+      );
+    }
+
+    function openEditTransactionModal(trxId) {
+      const trx = state.transactions.find(t => t.trx_id === trxId);
+      if (trx) openTransactionModal(trx.jenis, trx);
+    }
+
+    function updateTrxCategories() {
+      const jenis = document.getElementById("trx-jenis").value;
+      const cats = TRX_CATEGORIES[jenis] || [];
+      document.getElementById("trx-kategori").innerHTML = cats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join("");
+    }
+
+    async function submitTransactionForm(e, trxId = "") {
+      e.preventDefault();
+      const jenis = document.getElementById("trx-jenis").value;
+      const kategori = document.getElementById("trx-kategori").value;
+      const tanggal = document.getElementById("trx-tanggal").value;
+      const nominal = Number(document.getElementById("trx-nominal").value);
+      const member_id = document.getElementById("trx-member").value;
+      const keterangan = document.getElementById("trx-keterangan").value.trim();
+      const bukti_url = document.getElementById("trx-bukti").value.trim();
+
+      setLoading(true, "Menyimpan transaksi...");
+      try {
+        const res = await apiRequest("saveTransaction", {
+          trx_id: trxId || undefined,
+          jenis,
+          kategori,
+          tanggal,
+          periode_bulan: tanggal.slice(0, 7),
+          nominal,
+          member_id,
+          keterangan,
+          bukti_url
+        }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function confirmDeleteTransaction(trxId) {
+      openModal(
+        "Hapus Transaksi",
+        `<p style="font-size:14px; color:var(--text-muted);">Yakin ingin menghapus transaksi <strong class="mono">${escapeHTML(trxId)}</strong>? Saldo kas akan otomatis disesuaikan.</p>`,
+        `<button class="btn btn-outline" onclick="closeModal()">Batal</button>
+         <button class="btn btn-danger" onclick="deleteTransaction('${trxId}')">Ya, Hapus</button>`
+      );
+    }
+
+    async function deleteTransaction(trxId) {
+      setLoading(true, "Menghapus transaksi...");
+      try {
+        const res = await apiRequest("deleteTransaction", { trx_id: trxId }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ==========================================
+    // 4. LAPORAN & TRANSPARANSI KEUANGAN
+    // ==========================================
+    function renderReportsView() {
+      const targetPrefix = state.reportMode === "monthly"
+        ? `${state.reportYear}-${state.reportMonth}`
+        : `${state.reportYear}`;
+
+      const periodLabel = state.reportMode === "monthly"
+        ? `${formatPeriodeID(targetPrefix)}`
+        : `Tahun Buku ${state.reportYear}`;
+
+      const periodTrxs = state.transactions
+        .filter(t => String(t.tanggal).startsWith(targetPrefix))
+        .sort((a, b) => String(a.tanggal).localeCompare(String(b.tanggal)));
+
+      // Saldo sebelum periode
+      const prevTrxs = state.transactions.filter(t => String(t.tanggal).slice(0, targetPrefix.length) < targetPrefix);
+      const saldoAwal = prevTrxs.reduce((acc, t) => acc + (t.jenis === "Masuk" ? Number(t.nominal) : -Number(t.nominal)), 0);
+
+      const totalMasuk = periodTrxs.filter(t => t.jenis === "Masuk").reduce((a, b) => a + Number(b.nominal), 0);
+      const totalKeluar = periodTrxs.filter(t => t.jenis === "Keluar").reduce((a, b) => a + Number(b.nominal), 0);
+      const saldoAkhir = saldoAwal + totalMasuk - totalKeluar;
+
+      // Rekap per kategori
+      const groupByCat = (jenis) => {
+        const map = {};
+        periodTrxs.filter(t => t.jenis === jenis).forEach(t => {
+          map[t.kategori] = (map[t.kategori] || 0) + Number(t.nominal);
+        });
+        return Object.entries(map);
+      };
+
+      const masukCats = groupByCat("Masuk");
+      const keluarCats = groupByCat("Keluar");
+
+      return `
+        <!-- Header Khusus Cetak PDF -->
+        <div class="print-only" style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:14px; margin-bottom:20px;">
+          <h2 style="font-size:18px; text-transform:uppercase;">LAPORAN PERTANGGUNGJAWABAN KEUANGAN DANA SOSIAL</h2>
+          <h3 style="font-size:16px; margin-top:2px;">${escapeHTML(state.settings.nama_sekolah)}</h3>
+          <p style="font-size:13px; color:#475569; margin-top:4px;">Periode Laporan: <strong>${escapeHTML(periodLabel)}</strong></p>
+        </div>
+
+        <div class="card no-print" style="margin-bottom:18px;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Filter & Ekspor Laporan Resmi</h3>
+              <p class="card-subtitle">Transparansi pertanggungjawaban kas untuk warga sekolah</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="exportReportCSV()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Unduh CSV / Excel
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="window.print()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Cetak / Simpan PDF
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar" style="margin-bottom:0;">
+              <select class="select-control" onchange="state.reportMode=this.value; renderCurrentPage();">
+                <option value="monthly" ${state.reportMode === "monthly" ? "selected" : ""}>Laporan Bulanan</option>
+                <option value="yearly" ${state.reportMode === "yearly" ? "selected" : ""}>Laporan Tahunan</option>
+              </select>
+
+              ${state.reportMode === "monthly" ? `
+                <select class="select-control" onchange="state.reportMonth=this.value; renderCurrentPage();">
+                  ${MONTHS_ID.map(m => `<option value="${m.num}" ${state.reportMonth === m.num ? "selected" : ""}>${m.name}</option>`).join("")}
+                </select>
+              ` : ""}
+
+              <select class="select-control" onchange="state.reportYear=this.value; renderCurrentPage();">
+                <option value="2025" ${state.reportYear === "2025" ? "selected" : ""}>2025</option>
+                <option value="2026" ${state.reportYear === "2026" ? "selected" : ""}>2026</option>
+                <option value="2027" ${state.reportYear === "2027" ? "selected" : ""}>2027</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <section class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">Saldo Awal (${periodLabel})</span>
+            <div class="kpi-value tabular-nums">${formatRupiah(saldoAwal)}</div>
+            <div class="kpi-foot">Akumulasi sebelum periode</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Total Kas Masuk</span>
+            <div class="kpi-value tabular-nums" style="color:var(--success);">+ ${formatRupiah(totalMasuk)}</div>
+            <div class="kpi-foot">${periodTrxs.filter(t => t.jenis === "Masuk").length} transaksi masuk</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Total Penyaluran</span>
+            <div class="kpi-value tabular-nums" style="color:var(--danger);">- ${formatRupiah(totalKeluar)}</div>
+            <div class="kpi-foot">${periodTrxs.filter(t => t.jenis === "Keluar").length} penyaluran keluar</div>
+          </div>
+          <div class="kpi-card" style="background:var(--primary-soft); border-color:var(--primary-light);">
+            <span class="kpi-title" style="color:var(--primary);">Saldo Akhir Kas</span>
+            <div class="kpi-value tabular-nums" style="color:var(--primary);">${formatRupiah(saldoAkhir)}</div>
+            <div class="kpi-foot" style="color:var(--primary);">Posisi kas akhir periode</div>
+          </div>
+        </section>
+
+        <section class="form-row" style="margin-bottom:20px;">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Rincian Pemasukan</h3></div>
+            <div class="card-body">
+              ${masukCats.length === 0
+                ? `<p style="font-size:13px; color:var(--text-muted);">Tidak ada pemasukan pada periode ini.</p>`
+                : masukCats.map(([cat, val]) => `
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13.5px;">
+                      <span>${escapeHTML(cat)}</span>
+                      <strong class="tabular-nums" style="color:var(--success);">${formatRupiah(val)}</strong>
+                    </div>
+                  `).join("")
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Rincian Penyaluran Dana Sosial</h3></div>
+            <div class="card-body">
+              ${keluarCats.length === 0
+                ? `<p style="font-size:13px; color:var(--text-muted);">Tidak ada penyaluran dana pada periode ini.</p>`
+                : keluarCats.map(([cat, val]) => `
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13.5px;">
+                      <span>${escapeHTML(cat)}</span>
+                      <strong class="tabular-nums" style="color:var(--danger);">${formatRupiah(val)}</strong>
+                    </div>
+                  `).join("")
+              }
+            </div>
+          </div>
+        </section>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Jurnal Rincian Transaksi — ${escapeHTML(periodLabel)}</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Kategori</th>
+                    <th>Keterangan / Anggota</th>
+                    <th style="text-align:right;">Masuk</th>
+                    <th style="text-align:right;">Keluar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${periodTrxs.length === 0
+                    ? `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada transaksi pada periode ini.</td></tr>`
+                    : periodTrxs.map(t => `
+                        <tr>
+                          <td style="white-space:nowrap;">${formatDateID(t.tanggal)}</td>
+                          <td>${escapeHTML(t.kategori)}</td>
+                          <td>${t.member_id ? `<strong>${escapeHTML(getMemberName(t.member_id))}</strong> — ` : ""}${escapeHTML(t.keterangan)}</td>
+                          <td class="tabular-nums" style="text-align:right; color:var(--success);">${t.jenis === "Masuk" ? formatRupiah(t.nominal) : "-"}</td>
+                          <td class="tabular-nums" style="text-align:right; color:var(--danger);">${t.jenis === "Keluar" ? formatRupiah(t.nominal) : "-"}</td>
+                        </tr>
+                      `).join("")
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Blok Tanda Tangan Resmi untuk Cetak -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px; text-align:center; font-size:13px;">
+              <div>
+                <p>Mengetahui,</p>
+                <p>Kepala ${escapeHTML(state.settings.nama_sekolah)}</p>
+                <div style="height:64px;"></div>
+                <p style="font-weight:800; text-decoration:underline;">${escapeHTML(state.settings.nama_kepsek)}</p>
+              </div>
+              <div>
+                <p>Dibuat oleh,</p>
+                <p>Bendahara Dana Sosial</p>
+                <div style="height:64px;"></div>
+                <p style="font-weight:800; text-decoration:underline;">${escapeHTML(state.settings.nama_bendahara)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function exportReportCSV() {
+      const targetPrefix = state.reportMode === "monthly" ? `${state.reportYear}-${state.reportMonth}` : `${state.reportYear}`;
+      const rows = state.transactions
+        .filter(t => String(t.tanggal).startsWith(targetPrefix))
+        .sort((a, b) => String(a.tanggal).localeCompare(String(b.tanggal)));
+
+      if (rows.length === 0) {
+        showToast("Tidak ada data transaksi pada periode terpilih untuk diunduh.", "error");
+        return;
+      }
+
+      const header = ["ID Transaksi", "Tanggal", "Jenis", "Kategori", "Anggota", "Periode", "Nominal", "Keterangan"];
+      const csvLines = [header.join(",")];
+
+      rows.forEach(r => {
+        const line = [
+          r.trx_id,
+          r.tanggal,
+          r.jenis,
+          `"${String(r.kategori).replace(/"/g, '""')}"`,
+          `"${String(getMemberName(r.member_id)).replace(/"/g, '""')}"`,
+          r.periode_bulan,
+          r.nominal,
+          `"${String(r.keterangan).replace(/"/g, '""')}"`
+        ];
+        csvLines.push(line.join(","));
+      });
+
+      const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Laporan-Dana-Sosial-${targetPrefix}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("File CSV laporan berhasil diunduh.", "success");
+    }
+
+    // ==========================================
+    // 5. FITUR PENDUKUNG: KWITANSI DIGITAL & REMINDER WHATSAPP
+    // ==========================================
+    function openReceiptModal(trxId) {
+      const trx = state.transactions.find(t => t.trx_id === trxId);
+      if (!trx) return;
+      const memberName = trx.member_id ? getMemberName(trx.member_id) : "Donatur / Umum";
+      const receiptText = `KWITANSI DIGITAL DANA SOSIAL\n${state.settings.nama_sekolah}\nNo: ${trx.trx_id}\nTanggal: ${formatDateID(trx.tanggal)}\nTelah diterima dari: ${memberName}\nKategori: ${trx.kategori} (${formatPeriodeID(trx.periode_bulan)})\nNominal: ${formatRupiah(trx.nominal)}\nTerbilang: ${terbilang(trx.nominal)}\nStatus: LUNAS`;
+
+      openModal(
+        "Kwitansi / Bukti Setor Digital",
+        `
+          <div class="receipt-paper" id="receipt-printable">
+            <div class="receipt-stamp">LUNAS</div>
+            <div style="font-size:12px; font-weight:700; color:var(--primary); text-transform:uppercase;">${escapeHTML(state.settings.nama_sekolah)}</div>
+            <div style="font-size:16px; font-weight:800; margin-top:2px;">BUKTI PENERIMAAN DANA SOSIAL</div>
+            <div class="mono" style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">No. Ref: ${escapeHTML(trx.trx_id)}</div>
+
+            <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:6px;">
+                <span style="color:var(--text-muted);">Tanggal Transaksi</span>
+                <strong>${formatDateID(trx.tanggal)}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:6px;">
+                <span style="color:var(--text-muted);">Diterima Dari</span>
+                <strong>${escapeHTML(memberName)}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:6px;">
+                <span style="color:var(--text-muted);">Pembayaran</span>
+                <strong>${escapeHTML(trx.kategori)} (${formatPeriodeID(trx.periode_bulan)})</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:6px;">
+                <span style="color:var(--text-muted);">Keterangan</span>
+                <span style="text-align:right; max-width:240px;">${escapeHTML(trx.keterangan)}</span>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; padding:12px; background:var(--primary-soft); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; color:var(--primary); font-weight:700;">JUMLAH DITERIMA</div>
+                <div style="font-size:11px; color:var(--text-muted); font-style:italic;">${terbilang(trx.nominal)}</div>
+              </div>
+              <div class="tabular-nums" style="font-size:19px; font-weight:800; color:var(--primary);">${formatRupiah(trx.nominal)}</div>
+            </div>
+
+            <div style="margin-top:14px; font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between;">
+              <span>Bendahara: ${escapeHTML(state.settings.nama_bendahara)}</span>
+              <span>Dicatat: ${escapeHTML(trx.created_by || "admin")}</span>
+            </div>
+          </div>
+        `,
+        `<button class="btn btn-outline" onclick="closeModal()">Tutup</button>
+         <button class="btn btn-soft-primary" onclick="copyReceiptText(${JSON.stringify(receiptText)})">Salin Teks Kwitansi</button>
+         <button class="btn btn-primary" onclick="window.print()">Cetak</button>`
+      );
+    }
+
+    function copyReceiptText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Teks kwitansi berhasil disalin ke clipboard (siap ditempel ke WhatsApp).", "success");
+      }).catch(() => {
+        showToast("Gagal menyalin teks kwitansi.", "error");
+      });
+    }
+
+    function getMemberArrears(member) {
+      const curYM = getCurrentYM();
+      const curMo = parseInt(curYM.split("-")[1], 10);
+      const unpaidList = [];
+      for (let i = 1; i <= curMo; i++) {
+        const mObj = MONTHS_ID[i - 1];
+        const ym = `${state.selectedYear}-${mObj.num}`;
+        if (!hasPaidMonth(member.member_id, ym)) {
+          unpaidList.push(mObj.name);
+        }
+      }
+      return unpaidList;
+    }
+
+    function sendWhatsAppReminder(memberId) {
+      if (!isAdmin()) return;
+      const m = state.members.find(x => x.member_id === memberId);
+      if (!m || !m.no_wa) {
+        showToast("Nomor WhatsApp anggota belum diisi.", "error");
+        return;
+      }
+      const unpaid = getMemberArrears(m);
+      const total = unpaid.length * Number(m.nominal_iuran);
+      const text = `Assalamu'alaikum Wr. Wb.\nYth. Bapak/Ibu *${m.nama}*,\n\nIzin mengingatkan terkait Iuran Dana Sosial *${state.settings.nama_sekolah}* Tahun ${state.selectedYear} yang belum tercatat:\n• Bulan: *${unpaid.join(", ")}* (${unpaid.length} bulan)\n• Nominal: *${formatRupiah(total)}*\n\nPembayaran dapat disetorkan melalui Bendahara atau transfer ke ${state.settings.info_rekening}.\nTerima kasih atas perhatian dan partisipasinya.`;
+
+      const cleanPhone = String(m.no_wa).replace(/[^0-9]/g, "");
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+    }
+
+    function openReminderListModal() {
+      if (!isAdmin()) return openLoginModal();
+      const membersWithArrears = state.members
+        .filter(m => m.status === "Aktif")
+        .map(m => ({ member: m, unpaid: getMemberArrears(m) }))
+        .filter(item => item.unpaid.length > 0);
+
+      const listHTML = membersWithArrears.length === 0
+        ? `<p style="text-align:center; color:var(--success); font-weight:700; padding:16px 0;">Alhamdulillah, seluruh anggota aktif sudah lunas s.d. bulan ini!</p>`
+        : membersWithArrears.map(({ member, unpaid }) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);">
+              <div>
+                <div style="font-weight:700; font-size:13.5px;">${escapeHTML(member.nama)}</div>
+                <div style="font-size:12px; color:var(--warning);">Belum bayar: ${unpaid.join(", ")} (${formatRupiah(unpaid.length * member.nominal_iuran)})</div>
+              </div>
+              <button class="btn btn-xs btn-wa" onclick="sendWhatsAppReminder('${member.member_id}')">Kirim WA</button>
+            </div>
+          `).join("");
+
+      openModal(
+        `Pengingat Tagihan WhatsApp (${membersWithArrears.length} Anggota)`,
+        `<div style="max-height:360px; overflow-y:auto;">${listHTML}</div>`,
+        `<button class="btn btn-outline" onclick="closeModal()">Tutup</button>`
+      );
+    }
+
+    // ==========================================
+    // 6. PENGATURAN ADMIN (CRUD TERPROTEKSI)
+    // ==========================================
+    function renderAdminView() {
+      if (!isAdmin()) {
+        return `
+          <div class="card" style="max-width:480px; margin:24px auto; text-align:center;">
+            <div class="card-body" style="padding:32px 24px;">
+              <div style="width:54px; height:54px; border-radius:14px; background:var(--warning-soft); color:var(--warning); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <h3 style="font-size:18px; font-weight:800;">Area Terbatas Pengelola</h3>
+              <p style="font-size:13.5px; color:var(--text-muted); margin:8px 0 18px;">
+                Hanya Admin / Bendahara yang memiliki hak akses untuk menambah, mengubah, dan menghapus data anggota maupun pengaturan sistem.
+              </p>
+              <button class="btn btn-primary" onclick="openLoginModal()">Login Sebagai Admin</button>
+            </div>
+          </div>
+        `;
+      }
+
+      let tabContent = "";
+      if (state.adminTab === "members") {
+        tabContent = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h4 style="font-size:15px; font-weight:800;">Master Data Anggota Iuran (${state.members.length})</h4>
+              <p style="font-size:12.5px; color:var(--text-muted);">Tambah, ubah nominal khusus, atau nonaktifkan peserta iuran</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openMemberFormModal()">+ Tambah Anggota</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>NIP / Kode</th>
+                  <th>Nama Lengkap</th>
+                  <th>Unit</th>
+                  <th>No. WhatsApp</th>
+                  <th style="text-align:right;">Iuran/Bln</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">CRUD</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.members.map(m => `
+                  <tr>
+                    <td class="mono" style="font-size:12px;">${escapeHTML(m.kode_anggota || "-")}</td>
+                    <td style="font-weight:700;">${escapeHTML(m.nama)}</td>
+                    <td>${escapeHTML(m.unit_kelompok)}</td>
+                    <td class="mono" style="font-size:12px;">${escapeHTML(m.no_wa || "-")}</td>
+                    <td class="tabular-nums" style="text-align:right;">${formatRupiah(m.nominal_iuran)}</td>
+                    <td><span class="badge ${m.status === 'Aktif' ? 'badge-success' : 'badge-neutral'}">${escapeHTML(m.status)}</span></td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <button class="btn btn-xs btn-outline" onclick="openMemberFormModal('${m.member_id}')">Edit</button>
+                      <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteMember('${m.member_id}')">Hapus</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (state.adminTab === "settings") {
+        tabContent = `
+          <form onsubmit="submitSettingsForm(event)" style="max-width:640px; display:flex; flex-direction:column; gap:14px;">
+            <div class="form-group">
+              <label>Nama Sekolah / Instansi</label>
+              <input type="text" id="set-sekolah" class="input-control" value="${escapeHTML(state.settings.nama_sekolah)}" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tahun Buku Aktif</label>
+                <input type="number" id="set-tahun" class="input-control" value="${escapeHTML(state.settings.tahun_aktif)}" min="2020" max="2035" required />
+              </div>
+              <div class="form-group">
+                <label>Nominal Iuran Standar (Rp)</label>
+                <input type="number" id="set-nominal" class="input-control" value="${escapeHTML(state.settings.nominal_default)}" min="1000" step="500" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nama Bendahara Dana Sosial</label>
+                <input type="text" id="set-bendahara" class="input-control" value="${escapeHTML(state.settings.nama_bendahara)}" required />
+              </div>
+              <div class="form-group">
+                <label>Nama Kepala Sekolah</label>
+                <input type="text" id="set-kepsek" class="input-control" value="${escapeHTML(state.settings.nama_kepsek)}" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Informasi Rekening Kas / Catatan Transparansi</label>
+              <input type="text" id="set-rekening" class="input-control" value="${escapeHTML(state.settings.info_rekening)}" />
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Simpan Pengaturan Sekolah</button>
+            </div>
+          </form>
+        `;
+      } else if (state.adminTab === "users") {
+        tabContent = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h4 style="font-size:15px; font-weight:800;">Manajemen Akun Admin</h4>
+              <p style="font-size:12.5px; color:var(--text-muted);">Kelola pengelola yang memiliki hak akses CRUD sistem</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openUserFormModal()">+ Tambah Admin</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Nama Lengkap</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.users.map(u => `
+                  <tr>
+                    <td class="mono" style="font-weight:700;">${escapeHTML(u.username)}</td>
+                    <td>${escapeHTML(u.nama_lengkap)}</td>
+                    <td><span class="badge badge-info">${escapeHTML(u.role)}</span></td>
+                    <td><span class="badge ${u.status === 'Aktif' ? 'badge-success' : 'badge-neutral'}">${escapeHTML(u.status)}</span></td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <button class="btn btn-xs btn-outline" onclick="openUserFormModal('${u.user_id}')">Edit</button>
+                      <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteUser('${u.user_id}')">Hapus</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Panel Administrasi (CRUD Khusus Admin)</h3>
+              <p class="card-subtitle">Login aktif: <strong>${escapeHTML(state.session.nama_lengkap)}</strong></p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="tabs">
+              <button class="tab-btn ${state.adminTab === 'members' ? 'active' : ''}" onclick="state.adminTab='members'; renderCurrentPage();">1. Data Anggota</button>
+              <button class="tab-btn ${state.adminTab === 'settings' ? 'active' : ''}" onclick="state.adminTab='settings'; renderCurrentPage();">2. Pengaturan Sekolah</button>
+              <button class="tab-btn ${state.adminTab === 'users' ? 'active' : ''}" onclick="state.adminTab='users'; renderCurrentPage();">3. Akun Admin</button>
+            </div>
+            ${tabContent}
+          </div>
+        </div>
+      `;
+    }
+
+    // CRUD Anggota Modal
+    function openMemberFormModal(memberId = "") {
+      const m = memberId ? state.members.find(x => x.member_id === memberId) : null;
+      openModal(
+        m ? "Edit Data Anggota" : "Tambah Anggota Baru",
+        `
+          <form onsubmit="submitMemberForm(event, '${memberId}')" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-row">
+              <div class="form-group">
+                <label>NIP / Nomor Induk</label>
+                <input type="text" id="mbr-kode" class="input-control" value="${m ? escapeHTML(m.kode_anggota) : ""}" placeholder="Opsional" />
+              </div>
+              <div class="form-group">
+                <label>Unit / Kelompok</label>
+                <input type="text" id="mbr-unit" class="input-control" value="${m ? escapeHTML(m.unit_kelompok) : "Guru"}" placeholder="Guru / Staf TU / Karyawan" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nama Lengkap & Gelar</label>
+              <input type="text" id="mbr-nama" class="input-control" value="${m ? escapeHTML(m.nama) : ""}" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>No. WhatsApp (Format 628xxx)</label>
+                <input type="text" id="mbr-wa" class="input-control" value="${m ? escapeHTML(m.no_wa) : ""}" placeholder="628123456789" />
+              </div>
+              <div class="form-group">
+                <label>Nominal Iuran/Bln (Rp)</label>
+                <input type="number" id="mbr-nominal" class="input-control" value="${m ? m.nominal_iuran : state.settings.nominal_default}" min="1000" step="500" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Status Kepesertaan</label>
+              <select id="mbr-status" class="select-control">
+                <option value="Aktif" ${!m || m.status === "Aktif" ? "selected" : ""}>Aktif</option>
+                <option value="Nonaktif" ${m && m.status === "Nonaktif" ? "selected" : ""}>Nonaktif</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan Data Anggota</button>
+          </form>
+        `
+      );
+    }
+
+    async function submitMemberForm(e, memberId = "") {
+      e.preventDefault();
+      const payload = {
+        member_id: memberId || undefined,
+        kode_anggota: document.getElementById("mbr-kode").value.trim(),
+        unit_kelompok: document.getElementById("mbr-unit").value.trim(),
+        nama: document.getElementById("mbr-nama").value.trim(),
+        no_wa: document.getElementById("mbr-wa").value.trim(),
+        nominal_iuran: Number(document.getElementById("mbr-nominal").value),
+        status: document.getElementById("mbr-status").value
+      };
+
+      setLoading(true, "Menyimpan data anggota...");
+      try {
+        const res = await apiRequest("saveMember", payload, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function confirmDeleteMember(memberId) {
+      const m = state.members.find(x => x.member_id === memberId);
+      openModal(
+        "Hapus Data Anggota",
+        `<p style="font-size:14px; color:var(--text-muted);">Hapus anggota <strong>${escapeHTML(m ? m.nama : memberId)}</strong> dari daftar master?</p>`,
+        `<button class="btn btn-outline" onclick="closeModal()">Batal</button>
+         <button class="btn btn-danger" onclick="deleteMember('${memberId}')">Ya, Hapus</button>`
+      );
+    }
+
+    async function deleteMember(memberId) {
+      setLoading(true, "Menghapus anggota...");
+      try {
+        const res = await apiRequest("deleteMember", { member_id: memberId }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // CRUD Settings
+    async function submitSettingsForm(e) {
+      e.preventDefault();
+      const settings = {
+        nama_sekolah: document.getElementById("set-sekolah").value.trim(),
+        tahun_aktif: document.getElementById("set-tahun").value.trim(),
+        nominal_default: Number(document.getElementById("set-nominal").value),
+        nama_bendahara: document.getElementById("set-bendahara").value.trim(),
+        nama_kepsek: document.getElementById("set-kepsek").value.trim(),
+        info_rekening: document.getElementById("set-rekening").value.trim()
+      };
+
+      setLoading(true, "Menyimpan pengaturan...");
+      try {
+        const res = await apiRequest("saveSettings", { settings }, "POST");
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // CRUD Users Admin
+    function openUserFormModal(userId = "") {
+      const u = userId ? state.users.find(x => x.user_id === userId) : null;
+      openModal(
+        u ? "Edit Akun Admin" : "Tambah Akun Admin Baru",
+        `
+          <form onsubmit="submitUserForm(event, '${userId}')" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="usr-username" class="input-control" value="${u ? escapeHTML(u.username) : ""}" ${u ? "readonly" : ""} required />
+            </div>
+            <div class="form-group">
+              <label>Nama Lengkap</label>
+              <input type="text" id="usr-nama" class="input-control" value="${u ? escapeHTML(u.nama_lengkap) : ""}" required />
+            </div>
+            <div class="form-group">
+              <label>${u ? "Password Baru (Kosongkan jika tidak diubah)" : "Password"}</label>
+              <input type="password" id="usr-password" class="input-control" ${u ? "" : "required"} minlength="6" placeholder="Minimal 6 karakter" />
+            </div>
+            <div class="form-group">
+              <label>Status Akun</label>
+              <select id="usr-status" class="select-control">
+                <option value="Aktif" ${!u || u.status === "Aktif" ? "selected" : ""}>Aktif</option>
+                <option value="Nonaktif" ${u && u.status === "Nonaktif" ? "selected" : ""}>Nonaktif</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan Akun Admin</button>
+          </form>
+        `
+      );
+    }
+
+    async function submitUserForm(e, userId = "") {
+      e.preventDefault();
+      const payload = {
+        user_id: userId || undefined,
+        username: document.getElementById("usr-username").value.trim(),
+        nama_lengkap: document.getElementById("usr-nama").value.trim(),
+        password: document.getElementById("usr-password").value,
+        role: "Admin",
+        status: document.getElementById("usr-status").value
+      };
+
+      setLoading(true, "Menyimpan akun admin...");
+      try {
+        const res = await apiRequest("saveUser", payload, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function confirmDeleteUser(userId) {
+      openModal(
+        "Hapus Akun Admin",
+        `<p style="font-size:14px; color:var(--text-muted);">Yakin ingin menghapus akun admin ini?</p>`,
+        `<button class="btn btn-outline" onclick="closeModal()">Batal</button>
+         <button class="btn btn-danger" onclick="deleteUser('${userId}')">Ya, Hapus</button>`
+      );
+    }
+
+    async function deleteUser(userId) {
+      setLoading(true, "Menghapus akun...");
+      try {
+        const res = await apiRequest("deleteUser", { user_id: userId }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ==========================================
+    // BOOTSTRAP APLIKASI
+    // ==========================================
+    (function initApp() {
+      // Deteksi otomatis jika dijalankan di dalam Blogger
+      if (window.location.hostname.includes("blogspot.com")) {
+        document.body.classList.add("blogger-embed");
+      }
+
+      // Pulihkan sesi tersimpan jika ada
+      try {
+        const saved = localStorage.getItem("dansos_session");
+        if (saved) state.session = JSON.parse(saved);
+      } catch (_) {}
+
+      if (IS_PREVIEW) {
+        initDummyData();
+      }
+
+      refreshData();
+    })();
+  </script>
+</body>
+</html>
