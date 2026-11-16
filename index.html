@@ -1108,6 +1108,43 @@
       cursor: not-allowed;
     }
 
+    /* Quick-fill Note Chips */
+    .quick-note-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .chip-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+    }
+
     /* Digital Receipt Styling */
     .receipt-paper {
       border: 2px dashed var(--border-strong);
@@ -1604,6 +1641,7 @@
       settings: {
         nama_sekolah: "SMA Negeri 1 Harapan Bangsa",
         tahun_aktif: "2026",
+        daftar_tahun: "2025,2026,2027",
         nominal_default: 25000,
         nama_bendahara: "Hj. Siti Aminah, S.Pd.",
         nama_kepsek: "Drs. H. Ahmad Fauzi, M.Pd.",
@@ -1755,12 +1793,54 @@
       return mObj ? `${mObj.name} ${y}` : ym;
     }
 
-    function getCurrentYM() {
-      // Gunakan bulan berjalan (November 2026 pada konteks aktif atau sistem)
+    function getActiveBookYear() {
+      return String(state.settings.tahun_aktif || new Date().getFullYear());
+    }
+
+    function getRealCurrentYM() {
       const now = new Date();
-      const y = state.selectedYear || String(now.getFullYear());
+      const y = getActiveBookYear();
       const m = String(now.getMonth() + 1).padStart(2, "0");
       return `${y}-${m}`;
+    }
+
+    function getCurrentYM() {
+      // Gunakan bulan berjalan pada tahun yang dipilih atau tahun buku aktif
+      const now = new Date();
+      const y = state.selectedYear || getActiveBookYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      return `${y}-${m}`;
+    }
+
+    function getConfiguredYears() {
+      const raw = String(state.settings.daftar_tahun || "2025,2026,2027");
+      const set = new Set();
+      raw.split(",").forEach(part => {
+        const y = part.trim();
+        if (/^\d{4}$/.test(y)) set.add(y);
+      });
+      if (/^\d{4}$/.test(getActiveBookYear())) {
+        set.add(getActiveBookYear());
+      }
+      if (set.size === 0) {
+        ["2025", "2026", "2027"].forEach(y => set.add(y));
+      }
+      return Array.from(set).sort();
+    }
+
+    function getAvailableYears() {
+      const set = new Set(getConfiguredYears());
+      const activeY = Number(getActiveBookYear());
+      if (!isNaN(activeY)) set.add(String(activeY + 1)); // Selalu sediakan opsi tahun depan
+      if (/^\d{4}$/.test(String(state.selectedYear || ""))) set.add(String(state.selectedYear));
+      if (/^\d{4}$/.test(String(state.reportYear || ""))) set.add(String(state.reportYear));
+      state.transactions.forEach(t => {
+        const yTgl = String(t.tanggal || "").slice(0, 4);
+        const yPer = String(t.periode_bulan || "").slice(0, 4);
+        if (/^\d{4}$/.test(yTgl)) set.add(yTgl);
+        if (/^\d{4}$/.test(yPer)) set.add(yPer);
+      });
+      return Array.from(set).sort();
     }
 
     function getMemberName(memberId) {
@@ -2137,8 +2217,8 @@
         sideAuthBtn.className = "btn btn-primary";
       }
 
-      // Hitung anggota belum bayar bulan berjalan
-      const curYM = getCurrentYM();
+      // Hitung anggota belum bayar bulan berjalan (tahun buku aktif)
+      const curYM = getRealCurrentYM();
       const activeMembers = state.members.filter(m => m.status === "Aktif");
       const unpaidCount = activeMembers.filter(m => !hasPaidMonth(m.member_id, curYM)).length;
       const badgeEl = document.getElementById("badge-unpaid-count");
@@ -2556,7 +2636,9 @@
     // 2. MANAJEMEN ANGGOTA & MATRIKS IURAN
     // ==========================================
     function renderMembersView() {
-      const curYM = getCurrentYM();
+      const curYM = getRealCurrentYM();
+      const activeBookYear = getActiveBookYear();
+      const isFutureView = Number(state.selectedYear) > Number(activeBookYear);
       const units = ["ALL", ...new Set(state.members.map(m => m.unit_kelompok).filter(Boolean))];
 
       const filteredMembers = state.members.filter(m => {
@@ -2652,13 +2734,28 @@
         // Mobile-First Card View
         const cards = filteredMembers.map(m => {
           const paidNow = hasPaidMonth(m.member_id, curYM);
+          let paidInSelectedYear = 0;
+          let firstUnpaidSelectedYM = `${state.selectedYear}-01`;
+          let foundFirstUnpaid = false;
           const miniTags = MONTHS_ID.map((mo, mIdx) => {
             const ym = `${state.selectedYear}-${mo.num}`;
             const trx = getTransactionForMonth(m.member_id, ym);
-            const isOverdue = !trx && (mIdx + 1) <= currentMonthNum && state.selectedYear === String(state.settings.tahun_aktif);
+            if (trx) {
+              paidInSelectedYear++;
+            } else if (!foundFirstUnpaid) {
+              firstUnpaidSelectedYM = ym;
+              foundFirstUnpaid = true;
+            }
+            const isOverdue = !trx && (mIdx + 1) <= currentMonthNum && state.selectedYear === activeBookYear;
             const bg = trx ? "var(--success-soft); color:var(--success);" : isOverdue ? "var(--warning-soft); color:var(--warning);" : "#f1f5f9; color:#94a3b8;";
             return `<div class="mini-m-tag" style="background:${bg}">${mo.short}</div>`;
           }).join("");
+
+          const statusBadgeHTML = isFutureView
+            ? `<span class="badge ${paidInSelectedYear > 0 ? 'badge-info' : 'badge-neutral'}">${paidInSelectedYear > 0 ? `Dimuka (${paidInSelectedYear}/12 Bln)` : `Thn Depan (0/12)`}</span>`
+            : `<span class="badge ${paidNow ? 'badge-success' : 'badge-warning'}">${paidNow ? 'Lunas Bln Ini' : 'Belum Bayar'}</span>`;
+
+          const targetPayYM = isFutureView ? firstUnpaidSelectedYM : curYM;
 
           return `
             <div class="item-card">
@@ -2667,17 +2764,15 @@
                   <div style="font-weight:800; font-size:14.5px;">${escapeHTML(m.nama)}</div>
                   <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(m.unit_kelompok)} • Iuran ${formatRupiah(m.nominal_iuran)}</div>
                 </div>
-                <span class="badge ${paidNow ? 'badge-success' : 'badge-warning'}">
-                  ${paidNow ? 'Lunas Bln Ini' : 'Belum Bayar'}
-                </span>
+                ${statusBadgeHTML}
               </div>
               <div class="mini-months">${miniTags}</div>
               <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border); gap:8px;">
                 <button class="btn btn-xs btn-outline" onclick="openMemberDetailModal('${m.member_id}')">Riwayat & Rincian</button>
                 ${isAdmin()
                   ? `<div style="display:flex; gap:6px;">
-                       ${!paidNow ? `<button class="btn btn-xs btn-wa" onclick="sendWhatsAppReminder('${m.member_id}')">WA</button>` : ""}
-                       <button class="btn btn-xs btn-primary" onclick="openIuranModal('${m.member_id}', '${curYM}')">+ Bayar</button>
+                       ${!paidNow && !isFutureView ? `<button class="btn btn-xs btn-wa" onclick="sendWhatsAppReminder('${m.member_id}')">WA</button>` : ""}
+                       <button class="btn btn-xs btn-primary" onclick="openIuranModal('${m.member_id}', '${targetPayYM}')">+ Bayar</button>
                      </div>`
                   : ""
                 }
@@ -2706,9 +2801,7 @@
               </div>
 
               <select class="select-control" onchange="state.selectedYear=this.value; renderCurrentPage();">
-                <option value="2025" ${state.selectedYear === "2025" ? "selected" : ""}>Tahun 2025</option>
-                <option value="2026" ${state.selectedYear === "2026" ? "selected" : ""}>Tahun 2026</option>
-                <option value="2027" ${state.selectedYear === "2027" ? "selected" : ""}>Tahun 2027</option>
+                ${getAvailableYears().map(y => `<option value="${y}" ${state.selectedYear === y ? "selected" : ""}>Tahun ${y}</option>`).join("")}
               </select>
 
               <select class="select-control" onchange="state.memberUnitFilter=this.value; renderCurrentPage();">
@@ -2966,12 +3059,33 @@
       `;
     }
 
-    // Modal Catat Iuran Multi-Bulan
+    // Modal Catat Iuran Multi-Bulan (Mendukung Tahun Ini & Tahun Depan)
     function openIuranModal(preMemberId = "", preYM = "") {
       if (!isAdmin()) return openLoginModal();
       const activeMembers = state.members.filter(m => m.status === "Aktif");
       const defaultMember = activeMembers.find(m => m.member_id === preMemberId) || activeMembers[0];
       const todayStr = new Date().toISOString().slice(0, 10);
+
+      const activeBookYear = getActiveBookYear();
+      const nextYear = String(Number(activeBookYear) + 1);
+      const defaultYear = preYM && /^\d{4}-/.test(preYM)
+        ? preYM.slice(0, 4)
+        : (state.selectedYear || activeBookYear);
+
+      const yearsList = Array.from(new Set([
+        ...getAvailableYears(),
+        activeBookYear,
+        nextYear,
+        defaultYear
+      ])).sort();
+
+      window._iuranSelectedSet = new Set();
+      if (defaultMember) {
+        const initYM = preYM || getRealCurrentYM();
+        if (!hasPaidMonth(defaultMember.member_id, initYM)) {
+          window._iuranSelectedSet.add(initYM);
+        }
+      }
 
       openModal(
         "Catat Pembayaran Iuran Anggota",
@@ -2979,7 +3093,7 @@
           <form id="iuran-form" onsubmit="submitIuranForm(event)" style="display:flex; flex-direction:column; gap:14px;">
             <div class="form-group">
               <label>Pilih Anggota</label>
-              <select id="iuran-member" class="select-control" required onchange="refreshIuranMonthCheckboxes('${preYM}')">
+              <select id="iuran-member" class="select-control" required onchange="onIuranMemberChange()">
                 ${activeMembers.map(m => `<option value="${m.member_id}" ${defaultMember && m.member_id === defaultMember.member_id ? "selected" : ""}>${escapeHTML(m.nama)} (${escapeHTML(m.unit_kelompok)} — ${formatRupiah(m.nominal_iuran)})</option>`).join("")}
               </select>
             </div>
@@ -2996,9 +3110,18 @@
             </div>
 
             <div class="form-group">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label>Pilih Bulan Pembayaran (${state.selectedYear})</label>
-                <button type="button" class="btn btn-xs btn-soft-primary" onclick="selectUnpaidUpToNow()">Pilih Tunggakan s.d. Bln Ini</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                <label>Tahun & Bulan Pembayaran</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-xs btn-outline" onclick="switchIuranYear('${activeBookYear}')">Thn Ini (${activeBookYear})</button>
+                  <button type="button" class="btn btn-xs btn-soft-primary" onclick="switchIuranYear('${nextYear}')">Thn Depan (${nextYear})</button>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+                <select id="iuran-year" class="select-control" style="min-width:170px; flex:1;" onchange="refreshIuranMonthCheckboxes()">
+                  ${yearsList.map(y => `<option value="${y}" ${y === defaultYear ? "selected" : ""}>Tahun ${y}${y === nextYear ? " (Tahun Depan)" : y === activeBookYear ? " (Tahun Aktif)" : ""}</option>`).join("")}
+                </select>
+                <button type="button" id="iuran-quick-months-btn" class="btn btn-xs btn-soft-primary" onclick="selectUnpaidUpToNow()">Pilih Tunggakan s.d. Bln Ini</button>
               </div>
               <div class="month-picker-grid" id="iuran-month-grid"></div>
               <div id="iuran-total-preview" style="font-size:12.5px; font-weight:700; color:var(--primary); margin-top:4px;">Total Bayar: Rp 0 (0 bulan)</div>
@@ -3006,7 +3129,13 @@
 
             <div class="form-group">
               <label>Catatan / Keterangan (Opsional)</label>
-              <input type="text" id="iuran-note" class="input-control" placeholder="Contoh: Transfer BSI / Tunai ke bendahara" />
+              <div class="quick-note-chips" id="iuran-note-chips">
+                <button type="button" class="chip-btn" data-note="Transfer BSI" onclick="selectQuickNote('iuran-note', 'Transfer BSI', this)">🏦 Transfer BSI</button>
+                <button type="button" class="chip-btn" data-note="Tunai ke Bendahara" onclick="selectQuickNote('iuran-note', 'Tunai ke Bendahara', this)">💵 Tunai ke Bendahara</button>
+                <button type="button" class="chip-btn" data-note="Transfer Bank Lain" onclick="selectQuickNote('iuran-note', 'Transfer Bank Lain', this)">💳 Transfer Bank Lain</button>
+                <button type="button" class="chip-btn" data-note="QRIS" onclick="selectQuickNote('iuran-note', 'QRIS', this)">📱 QRIS</button>
+              </div>
+              <input type="text" id="iuran-note" class="input-control" placeholder="Klik tombol di atas atau ketik keterangan tambahan..." oninput="syncQuickNoteChips('iuran-note', 'iuran-note-chips')" />
             </div>
 
             <div class="form-group">
@@ -3019,23 +3148,72 @@
         `
       );
 
-      refreshIuranMonthCheckboxes(preYM);
+      refreshIuranMonthCheckboxes();
     }
 
-    function refreshIuranMonthCheckboxes(preSelectYM = "") {
+    function onIuranMemberChange() {
       const memberId = document.getElementById("iuran-member")?.value;
       const member = state.members.find(m => m.member_id === memberId);
       if (member && document.getElementById("iuran-nominal")) {
         document.getElementById("iuran-nominal").value = member.nominal_iuran;
+      }
+      window._iuranSelectedSet = new Set();
+      refreshIuranMonthCheckboxes();
+    }
+
+    function switchIuranYear(yearStr) {
+      const sel = document.getElementById("iuran-year");
+      if (!sel) return;
+      sel.value = String(yearStr);
+      refreshIuranMonthCheckboxes();
+    }
+
+    function selectQuickNote(inputId, text, btnEl) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isAlreadySame = input.value.trim() === text;
+      input.value = isAlreadySame ? "" : text;
+      const container = btnEl ? btnEl.parentElement : null;
+      if (container) {
+        container.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+        if (!isAlreadySame && btnEl) btnEl.classList.add("active");
+      }
+    }
+
+    function syncQuickNoteChips(inputId, chipsId) {
+      const input = document.getElementById(inputId);
+      const container = document.getElementById(chipsId);
+      if (!input || !container) return;
+      const val = input.value.trim();
+      container.querySelectorAll(".chip-btn").forEach(b => {
+        b.classList.toggle("active", val === (b.dataset.note || ""));
+      });
+    }
+
+    function refreshIuranMonthCheckboxes() {
+      const memberId = document.getElementById("iuran-member")?.value;
+      const targetYear = document.getElementById("iuran-year")?.value || state.selectedYear || getActiveBookYear();
+      const activeBookYear = getActiveBookYear();
+
+      if (!window._iuranSelectedSet) window._iuranSelectedSet = new Set();
+
+      const quickBtn = document.getElementById("iuran-quick-months-btn");
+      if (quickBtn) {
+        quickBtn.textContent = Number(targetYear) > Number(activeBookYear)
+          ? `Pilih 1 Tahun Penuh (${targetYear})`
+          : Number(targetYear) < Number(activeBookYear)
+            ? `Pilih Semua Belum Lunas (${targetYear})`
+            : "Pilih Tunggakan s.d. Bln Ini";
       }
 
       const grid = document.getElementById("iuran-month-grid");
       if (!grid) return;
 
       grid.innerHTML = MONTHS_ID.map(mo => {
-        const ym = `${state.selectedYear}-${mo.num}`;
+        const ym = `${targetYear}-${mo.num}`;
         const paid = hasPaidMonth(memberId, ym);
-        const shouldCheck = !paid && (preSelectYM === ym || (!preSelectYM && ym === getCurrentYM()));
+        if (paid) window._iuranSelectedSet.delete(ym);
+        const shouldCheck = !paid && window._iuranSelectedSet.has(ym);
         return `
           <label class="month-check-item ${paid ? 'already-paid' : shouldCheck ? 'selected' : ''}" data-ym="${ym}">
             <input type="checkbox" value="${ym}" ${paid ? "disabled" : ""} ${shouldCheck ? "checked" : ""} style="display:none;" onchange="toggleMonthCheckbox(this)" />
@@ -3048,27 +3226,52 @@
     }
 
     function toggleMonthCheckbox(cb) {
+      if (!window._iuranSelectedSet) window._iuranSelectedSet = new Set();
+      if (cb.checked) {
+        window._iuranSelectedSet.add(cb.value);
+      } else {
+        window._iuranSelectedSet.delete(cb.value);
+      }
       cb.parentElement.classList.toggle("selected", cb.checked);
       updateIuranTotalPreview();
     }
 
     function selectUnpaidUpToNow() {
-      const curMo = parseInt(getCurrentYM().split("-")[1], 10);
-      document.querySelectorAll("#iuran-month-grid input[type='checkbox']:not(:disabled)").forEach((cb, idx) => {
+      if (!window._iuranSelectedSet) window._iuranSelectedSet = new Set();
+      const targetYear = document.getElementById("iuran-year")?.value || getActiveBookYear();
+      const activeBookYear = getActiveBookYear();
+      const curMo = parseInt(getRealCurrentYM().split("-")[1], 10);
+      const isActiveYear = targetYear === activeBookYear;
+
+      document.querySelectorAll("#iuran-month-grid input[type='checkbox']:not(:disabled)").forEach(cb => {
         const moNum = parseInt(cb.value.split("-")[1], 10);
-        cb.checked = moNum <= curMo;
+        const selectIt = isActiveYear ? (moNum <= curMo) : true;
+        cb.checked = selectIt;
+        if (selectIt) {
+          window._iuranSelectedSet.add(cb.value);
+        } else {
+          window._iuranSelectedSet.delete(cb.value);
+        }
         cb.parentElement.classList.toggle("selected", cb.checked);
       });
       updateIuranTotalPreview();
     }
 
     function updateIuranTotalPreview() {
-      const checked = Array.from(document.querySelectorAll("#iuran-month-grid input[type='checkbox']:checked"));
+      const selected = Array.from(window._iuranSelectedSet || []).sort();
       const perMonth = Number(document.getElementById("iuran-nominal")?.value) || 0;
-      const total = checked.length * perMonth;
+      const total = selected.length * perMonth;
       const el = document.getElementById("iuran-total-preview");
       if (el) {
-        el.textContent = `Total Bayar: ${formatRupiah(total)} (${checked.length} bulan dipilih)`;
+        const labels = selected.map(ym => {
+          const [y, m] = ym.split("-");
+          const mObj = MONTHS_ID.find(x => x.num === m);
+          return mObj ? `${mObj.short} ${y}` : ym;
+        });
+        const detail = labels.length > 0
+          ? `<div style="font-size:11.5px; font-weight:600; color:var(--text-muted); margin-top:2px;">Periode: ${escapeHTML(labels.join(", "))}</div>`
+          : "";
+        el.innerHTML = `Total Bayar: ${formatRupiah(total)} (${selected.length} bulan dipilih)${detail}`;
       }
     }
 
@@ -3077,7 +3280,7 @@
       const member_id = document.getElementById("iuran-member").value;
       const tanggal = document.getElementById("iuran-date").value;
       const nominal_per_bulan = Number(document.getElementById("iuran-nominal").value);
-      const periode_list = Array.from(document.querySelectorAll("#iuran-month-grid input[type='checkbox']:checked")).map(cb => cb.value);
+      const periode_list = Array.from(window._iuranSelectedSet || []).sort();
       const keterangan = document.getElementById("iuran-note").value.trim();
       const bukti_url = document.getElementById("iuran-bukti").value.trim();
 
@@ -3158,6 +3361,10 @@
 
             <div class="form-group">
               <label>Uraian / Keterangan Lengkap</label>
+              <div class="quick-note-chips">
+                <button type="button" class="chip-btn" onclick="applyTrxMethodNote('Transfer BSI')">🏦 + Transfer BSI</button>
+                <button type="button" class="chip-btn" onclick="applyTrxMethodNote('Tunai ke Bendahara')">💵 + Tunai</button>
+              </div>
               <textarea id="trx-keterangan" class="textarea-control" rows="2" placeholder="Contoh: Santunan sakit rawat inap Bapak/Ibu..." required>${existingTrx ? escapeHTML(existingTrx.keterangan) : ""}</textarea>
             </div>
 
@@ -3181,6 +3388,18 @@
       const jenis = document.getElementById("trx-jenis").value;
       const cats = TRX_CATEGORIES[jenis] || [];
       document.getElementById("trx-kategori").innerHTML = cats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join("");
+    }
+
+    function applyTrxMethodNote(method) {
+      const el = document.getElementById("trx-keterangan");
+      if (!el) return;
+      const cur = el.value.trim();
+      if (!cur) {
+        el.value = method;
+      } else if (!cur.includes(method)) {
+        el.value = `${cur} (${method})`;
+      }
+      el.focus();
     }
 
     async function submitTransactionForm(e, trxId = "") {
@@ -3314,10 +3533,14 @@
               ` : ""}
 
               <select class="select-control" onchange="state.reportYear=this.value; renderCurrentPage();">
-                <option value="2025" ${state.reportYear === "2025" ? "selected" : ""}>2025</option>
-                <option value="2026" ${state.reportYear === "2026" ? "selected" : ""}>2026</option>
-                <option value="2027" ${state.reportYear === "2027" ? "selected" : ""}>2027</option>
+                ${getAvailableYears().map(y => `<option value="${y}" ${state.reportYear === y ? "selected" : ""}>${y}</option>`).join("")}
               </select>
+
+              ${isAdmin() ? `
+                <button type="button" class="btn btn-soft-primary btn-sm" onclick="openManageYearsModal()" title="Tambah atau edit daftar tahun laporan">
+                  + Tambah / Edit Tahun
+                </button>
+              ` : ""}
             </div>
           </div>
         </div>
@@ -3466,6 +3689,112 @@
       a.click();
       URL.revokeObjectURL(url);
       showToast("File CSV laporan berhasil diunduh.", "success");
+    }
+
+    function openManageYearsModal() {
+      if (!isAdmin()) return openLoginModal();
+      const years = getConfiguredYears();
+      window._tempEditYears = [...years];
+
+      openModal(
+        "Kelola Tahun Laporan (Admin)",
+        `
+          <p style="font-size:13px; color:var(--text-muted);">
+            Tambahkan tahun baru atau edit manual tahun yang tampil pada pilihan laporan dan matriks iuran.
+          </p>
+          <div style="display:flex; gap:8px;">
+            <input type="number" id="new-report-year-input" class="input-control" style="flex:1;" placeholder="Contoh: 2028" min="2000" max="2099" onkeydown="if(event.key==='Enter'){event.preventDefault(); addTempYearRow();}" />
+            <button type="button" class="btn btn-primary btn-sm" onclick="addTempYearRow()">+ Tambah</button>
+          </div>
+          <div id="manage-years-list" style="display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; padding-top:4px;"></div>
+        `,
+        `<button class="btn btn-outline" onclick="closeModal()">Batal</button>
+         <button class="btn btn-primary" onclick="saveManagedYears()">Simpan Daftar Tahun</button>`
+      );
+
+      renderManagedYearsList();
+    }
+
+    function renderManagedYearsList() {
+      const box = document.getElementById("manage-years-list");
+      if (!box) return;
+      const list = window._tempEditYears || [];
+      box.innerHTML = list.map((yr, idx) => `
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px; background:#f8fafc; border:1.5px solid var(--border); border-radius:10px;">
+          <span style="font-size:12px; font-weight:700; color:var(--text-muted); width:26px;">#${idx + 1}</span>
+          <input type="number" class="input-control mono" style="flex:1; font-weight:700;" value="${escapeHTML(yr)}" min="2000" max="2099" onchange="updateTempYearRow(${idx}, this.value)" />
+          <button type="button" class="btn btn-xs btn-soft-primary" onclick="state.reportYear=window._tempEditYears[${idx}]; closeModal(); renderCurrentPage();" title="Pilih tahun ini di laporan">Pakai</button>
+          <button type="button" class="btn btn-xs btn-soft-danger" onclick="removeTempYearRow(${idx})" ${list.length <= 1 ? "disabled" : ""}>Hapus</button>
+        </div>
+      `).join("");
+    }
+
+    function addTempYearRow() {
+      const inp = document.getElementById("new-report-year-input");
+      if (!inp) return;
+      const y = String(inp.value || "").trim();
+      if (!/^\d{4}$/.test(y) || Number(y) < 2000 || Number(y) > 2099) {
+        showToast("Masukkan tahun 4 digit yang valid (2000–2099).", "error");
+        return;
+      }
+      if (!window._tempEditYears.includes(y)) {
+        window._tempEditYears.push(y);
+        window._tempEditYears.sort();
+      } else {
+        showToast(`Tahun ${y} sudah ada di daftar.`, "info");
+      }
+      inp.value = "";
+      renderManagedYearsList();
+    }
+
+    function updateTempYearRow(idx, val) {
+      const y = String(val || "").trim();
+      if (!/^\d{4}$/.test(y) || Number(y) < 2000 || Number(y) > 2099) {
+        showToast("Tahun harus 4 digit (2000–2099).", "error");
+        renderManagedYearsList();
+        return;
+      }
+      window._tempEditYears[idx] = y;
+    }
+
+    function removeTempYearRow(idx) {
+      if ((window._tempEditYears || []).length <= 1) return;
+      window._tempEditYears.splice(idx, 1);
+      renderManagedYearsList();
+    }
+
+    async function saveManagedYears() {
+      const cleaned = Array.from(new Set(
+        (window._tempEditYears || [])
+          .map(y => String(y).trim())
+          .filter(y => /^\d{4}$/.test(y) && Number(y) >= 2000 && Number(y) <= 2099)
+      )).sort();
+
+      if (cleaned.length === 0) {
+        showToast("Minimal harus ada 1 tahun yang valid.", "error");
+        return;
+      }
+
+      const newSettings = {
+        ...state.settings,
+        daftar_tahun: cleaned.join(",")
+      };
+
+      setLoading(true, "Menyimpan daftar tahun...");
+      try {
+        const res = await apiRequest("saveSettings", { settings: newSettings }, "POST");
+        state.settings.daftar_tahun = newSettings.daftar_tahun;
+        if (!cleaned.includes(state.reportYear)) {
+          state.reportYear = cleaned[cleaned.length - 1];
+        }
+        closeModal();
+        showToast(res.message || "Daftar tahun berhasil disimpan.", "success");
+        await refreshData();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
     }
 
     // ==========================================
@@ -3661,12 +3990,16 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Tahun Buku Aktif</label>
-                <input type="number" id="set-tahun" class="input-control" value="${escapeHTML(state.settings.tahun_aktif)}" min="2020" max="2035" required />
+                <input type="number" id="set-tahun" class="input-control" value="${escapeHTML(state.settings.tahun_aktif)}" min="2000" max="2099" required />
               </div>
               <div class="form-group">
                 <label>Nominal Iuran Standar (Rp)</label>
                 <input type="number" id="set-nominal" class="input-control" value="${escapeHTML(state.settings.nominal_default)}" min="1000" step="500" required />
               </div>
+            </div>
+            <div class="form-group">
+              <label>Daftar Tahun Laporan (pisahkan dengan koma)</label>
+              <input type="text" id="set-daftar-tahun" class="input-control mono" value="${escapeHTML(state.settings.daftar_tahun || getConfiguredYears().join(","))}" placeholder="2025,2026,2027,2028" />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -3842,9 +4175,17 @@
     // CRUD Settings
     async function submitSettingsForm(e) {
       e.preventDefault();
+      const rawYears = (document.getElementById("set-daftar-tahun")?.value || "").split(",")
+        .map(y => y.trim())
+        .filter(y => /^\d{4}$/.test(y) && Number(y) >= 2000 && Number(y) <= 2099);
+      const tahunAktif = document.getElementById("set-tahun").value.trim();
+      if (/^\d{4}$/.test(tahunAktif) && !rawYears.includes(tahunAktif)) rawYears.push(tahunAktif);
+      const daftarTahun = Array.from(new Set(rawYears)).sort().join(",") || "2025,2026,2027";
+
       const settings = {
         nama_sekolah: document.getElementById("set-sekolah").value.trim(),
-        tahun_aktif: document.getElementById("set-tahun").value.trim(),
+        tahun_aktif: tahunAktif,
+        daftar_tahun: daftarTahun,
         nominal_default: Number(document.getElementById("set-nominal").value),
         nama_bendahara: document.getElementById("set-bendahara").value.trim(),
         nama_kepsek: document.getElementById("set-kepsek").value.trim(),
