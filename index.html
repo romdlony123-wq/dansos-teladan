@@ -1145,6 +1145,34 @@
       box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
     }
 
+    /* Inline Spreadsheet Table Edit */
+    .inline-cell-input {
+      width: 100%;
+      min-width: 80px;
+      padding: 6px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-main);
+      background: #ffffff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .inline-cell-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    tr.inline-row-dirty {
+      background: #f0fdfa !important;
+    }
+
+    tr.inline-row-dirty td:first-child {
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
+
     /* Digital Receipt Styling */
     .receipt-paper {
       border: 2px dashed var(--border-strong);
@@ -1514,7 +1542,7 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span class="hide-xs">Mode Pantau</span>
           </span>
-          <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Muat Ulang Data">
+          <button class="btn btn-outline btn-sm" onclick="refreshData({ fresh: true })" title="Muat Ulang & Sinkronkan Data dari Spreadsheet">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
           <button id="topbar-auth-btn" class="btn btn-primary btn-sm" onclick="handleAuthButtonClick()">
@@ -1625,6 +1653,12 @@
     const state = {
       currentPage: "dashboard",
       adminTab: "members",
+      adminMemberSearch: "",
+      memberInlineEdit: false,
+      inlineMemberDrafts: {},
+      lastDataHash: "",
+      lastSyncAt: 0,
+      isSyncing: false,
       selectedYear: "2026",
       memberViewMode: window.innerWidth >= 1024 ? "matrix" : "cards",
       memberSearch: "",
@@ -2003,6 +2037,20 @@
           }
         }
 
+        case "saveMembersBatch": {
+          if (!isAdmin()) return { status: "error", message: "Akses ditolak. Hanya Admin yang dapat mengubah data." };
+          const updates = Array.isArray(payload.members) ? payload.members : [];
+          let updated = 0;
+          updates.forEach(u => {
+            const idx = state.members.findIndex(m => m.member_id === u.member_id);
+            if (idx > -1) {
+              state.members[idx] = { ...state.members[idx], ...u };
+              updated++;
+            }
+          });
+          return { status: "success", message: `${updated} data anggota berhasil diperbarui.` };
+        }
+
         case "deleteMember": {
           if (!isAdmin()) return { status: "error", message: "Akses ditolak." };
           state.members = state.members.filter(m => m.member_id !== payload.member_id);
@@ -2095,25 +2143,85 @@
     // ==========================================
     // SINKRONISASI & AUTHENTICATION
     // ==========================================
-    async function refreshData() {
-      setLoading(true, "Memuat data kas & iuran...");
+    function computeDataHash_(dataObj) {
       try {
-        const res = await apiRequest("getInitialData", {}, "GET");
+        return JSON.stringify({
+          settings: dataObj.settings || state.settings,
+          members: dataObj.members || state.members,
+          transactions: dataObj.transactions || state.transactions,
+          users: dataObj.users || state.users
+        });
+      } catch (_) {
+        return String(Date.now());
+      }
+    }
+
+    function isUserCurrentlyEditing_() {
+      if (state.memberInlineEdit) return true;
+      const modalOpen = document.getElementById("universal-modal")?.classList.contains("open");
+      if (modalOpen) return true;
+      const activeTag = document.activeElement?.tagName;
+      return activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT";
+    }
+
+    async function refreshData(options = {}) {
+      const { silent = false, fresh = false } = options;
+      if (state.isSyncing) return;
+      state.isSyncing = true;
+
+      if (!silent) setLoading(true, "Memuat data kas & iuran...");
+      try {
+        const params = fresh ? { fresh: "1" } : {};
+        const res = await apiRequest("getInitialData", params, "GET");
         if (res.data) {
-          if (res.data.settings) state.settings = { ...state.settings, ...res.data.settings };
-          if (Array.isArray(res.data.members)) state.members = res.data.members;
-          if (Array.isArray(res.data.transactions)) state.transactions = res.data.transactions;
-          if (Array.isArray(res.data.users)) state.users = res.data.users;
+          const nextSettings = res.data.settings ? { ...state.settings, ...res.data.settings } : state.settings;
+          const nextMembers = Array.isArray(res.data.members) ? res.data.members : state.members;
+          const nextTrxs = Array.isArray(res.data.transactions) ? res.data.transactions : state.transactions;
+          const nextUsers = Array.isArray(res.data.users) ? res.data.users : state.users;
+
+          const nextHash = computeDataHash_({
+            settings: nextSettings,
+            members: nextMembers,
+            transactions: nextTrxs,
+            users: nextUsers
+          });
+
+          const hasChanged = state.lastDataHash !== "" && nextHash !== state.lastDataHash;
+          if (silent && !hasChanged) {
+            state.lastSyncAt = Date.now();
+            return;
+          }
+
+          if (silent && isUserCurrentlyEditing_()) {
+            // Tunda overwrite UI agar editan pengguna tidak hilang
+            return;
+          }
+
+          state.settings = nextSettings;
+          state.members = nextMembers;
+          state.transactions = nextTrxs;
+          state.users = nextUsers;
+          state.lastDataHash = nextHash;
+          state.lastSyncAt = Date.now();
+
           if (state.settings.tahun_aktif && !state.selectedYear) {
             state.selectedYear = String(state.settings.tahun_aktif);
           }
+
+          updateShellUI();
+          renderCurrentPage();
+          if (silent && hasChanged) {
+            showToast("Data tersinkron otomatis dari Spreadsheet.", "info");
+          }
+          return;
         }
         updateShellUI();
         renderCurrentPage();
       } catch (err) {
-        showToast(err.message, "error");
+        if (!silent) showToast(err.message, "error");
       } finally {
-        setLoading(false);
+        state.isSyncing = false;
+        if (!silent) setLoading(false);
       }
     }
 
@@ -3940,14 +4048,48 @@
 
       let tabContent = "";
       if (state.adminTab === "members") {
+        const draftCount = Object.keys(state.inlineMemberDrafts || {}).length;
+        const zeroNominalCount = state.members.filter(m => m.status === "Aktif" && (Number(m.nominal_iuran) || 0) <= 0).length;
+        const toolbarHTML = state.memberInlineEdit
+          ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">
+               <button class="btn btn-outline btn-sm" onclick="toggleInlineMemberEdit(false)">Batal</button>
+               <button id="btn-save-inline-members" class="btn btn-success btn-sm" onclick="saveInlineMemberChanges()" ${draftCount === 0 ? "disabled" : ""}>
+                 💾 Simpan Perubahan (${draftCount})
+               </button>
+             </div>`
+          : `<div style="display:flex; gap:8px; flex-wrap:wrap;">
+               <button class="btn btn-outline btn-sm" onclick="openBulkNominalModal()">
+                 ⚡ Set Iuran Massal${zeroNominalCount > 0 ? ` (${zeroNominalCount} Rp 0)` : ""}
+               </button>
+               <button class="btn btn-soft-primary btn-sm" onclick="toggleInlineMemberEdit(true)">
+                 ✏️ Edit Langsung di Tabel
+               </button>
+               <button class="btn btn-primary btn-sm" onclick="openMemberFormModal()">+ Tambah Anggota</button>
+             </div>`;
+
         tabContent = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
             <div>
               <h4 style="font-size:15px; font-weight:800;">Master Data Anggota Iuran (${state.members.length})</h4>
-              <p style="font-size:12.5px; color:var(--text-muted);">Tambah, ubah nominal khusus, atau nonaktifkan peserta iuran</p>
+              <p style="font-size:12.5px; color:var(--text-muted);">
+                ${state.memberInlineEdit
+                  ? "Mode Edit Langsung aktif — ubah sel langsung seperti Spreadsheet lalu klik Simpan Perubahan."
+                  : "Sinkron 2 arah dengan Google Sheets: edit di web atau langsung di Spreadsheet."}
+              </p>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openMemberFormModal()">+ Tambah Anggota</button>
+            ${toolbarHTML}
           </div>
+
+          <div class="filter-bar" style="margin-bottom:12px;">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="admin-member-search" class="input-control" placeholder="Cari nama, NIP, atau unit..." value="${escapeHTML(state.adminMemberSearch)}" oninput="state.adminMemberSearch=this.value; renderAdminMembersTbody();" />
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="refreshData({ fresh: true })" title="Tarik data terbaru dari Spreadsheet">
+              🔄 Tarik dari Spreadsheet
+            </button>
+          </div>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -3961,21 +4103,8 @@
                   <th style="text-align:right;">CRUD</th>
                 </tr>
               </thead>
-              <tbody>
-                ${state.members.map(m => `
-                  <tr>
-                    <td class="mono" style="font-size:12px;">${escapeHTML(m.kode_anggota || "-")}</td>
-                    <td style="font-weight:700;">${escapeHTML(m.nama)}</td>
-                    <td>${escapeHTML(m.unit_kelompok)}</td>
-                    <td class="mono" style="font-size:12px;">${escapeHTML(m.no_wa || "-")}</td>
-                    <td class="tabular-nums" style="text-align:right;">${formatRupiah(m.nominal_iuran)}</td>
-                    <td><span class="badge ${m.status === 'Aktif' ? 'badge-success' : 'badge-neutral'}">${escapeHTML(m.status)}</span></td>
-                    <td style="text-align:right; white-space:nowrap;">
-                      <button class="btn btn-xs btn-outline" onclick="openMemberFormModal('${m.member_id}')">Edit</button>
-                      <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteMember('${m.member_id}')">Hapus</button>
-                    </td>
-                  </tr>
-                `).join("")}
+              <tbody id="admin-members-tbody">
+                ${buildAdminMembersRowsHTML()}
               </tbody>
             </table>
           </div>
@@ -4278,13 +4407,200 @@
         await refreshData();
       } catch (err) {
         showToast(err.message, "error");
-      } finally {-
+      } finally {
         setLoading(false);
       }
     }
 
     // ==========================================
-    // BOOTSTRAP APLIKASI
+    // EDIT LANGSUNG DI TABEL & SET IURAN MASSAL
+    // ==========================================
+    function buildAdminMembersRowsHTML() {
+      const q = (state.adminMemberSearch || "").toLowerCase().trim();
+      const filtered = state.members.filter(m =>
+        !q ||
+        String(m.nama || "").toLowerCase().includes(q) ||
+        String(m.kode_anggota || "").toLowerCase().includes(q) ||
+        String(m.unit_kelompok || "").toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        return `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">Tidak ada anggota yang sesuai pencarian.</td></tr>`;
+      }
+
+      if (!state.memberInlineEdit) {
+        return filtered.map(m => `
+          <tr>
+            <td class="mono" style="font-size:12px;">${escapeHTML(m.kode_anggota || "-")}</td>
+            <td style="font-weight:700;">${escapeHTML(m.nama)}</td>
+            <td>${escapeHTML(m.unit_kelompok)}</td>
+            <td class="mono" style="font-size:12px;">${escapeHTML(m.no_wa || "-")}</td>
+            <td class="tabular-nums" style="text-align:right; font-weight:700; color:${Number(m.nominal_iuran) <= 0 ? 'var(--warning)' : 'var(--text-main)'};">${formatRupiah(m.nominal_iuran)}</td>
+            <td><span class="badge ${m.status === 'Aktif' ? 'badge-success' : 'badge-neutral'}">${escapeHTML(m.status)}</span></td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-xs btn-outline" onclick="openMemberFormModal('${m.member_id}')">Edit</button>
+              <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteMember('${m.member_id}')">Hapus</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      return filtered.map(m => {
+        const draft = state.inlineMemberDrafts[m.member_id];
+        const cur = draft || m;
+        const dirtyClass = draft ? "inline-row-dirty" : "";
+        return `
+          <tr class="${dirtyClass}" data-member-id="${escapeHTML(m.member_id)}">
+            <td><input type="text" class="inline-cell-input mono" style="min-width:125px;" value="${escapeHTML(cur.kode_anggota || "")}" placeholder="NIP / Kode" oninput="updateInlineMemberDraft('${m.member_id}', 'kode_anggota', this.value, this)" /></td>
+            <td><input type="text" class="inline-cell-input" style="min-width:190px; font-weight:700;" value="${escapeHTML(cur.nama || "")}" required oninput="updateInlineMemberDraft('${m.member_id}', 'nama', this.value, this)" /></td>
+            <td><input type="text" class="inline-cell-input" style="min-width:100px;" value="${escapeHTML(cur.unit_kelompok || "Guru")}" oninput="updateInlineMemberDraft('${m.member_id}', 'unit_kelompok', this.value, this)" /></td>
+            <td><input type="text" class="inline-cell-input mono" style="min-width:125px;" value="${escapeHTML(cur.no_wa || "")}" placeholder="628xxx" oninput="updateInlineMemberDraft('${m.member_id}', 'no_wa', this.value, this)" /></td>
+            <td><input type="number" class="inline-cell-input tabular-nums" style="min-width:105px; text-align:right; font-weight:700;" min="0" step="500" value="${Number(cur.nominal_iuran) || 0}" oninput="updateInlineMemberDraft('${m.member_id}', 'nominal_iuran', Number(this.value) || 0, this)" /></td>
+            <td>
+              <select class="inline-cell-input" style="min-width:95px;" onchange="updateInlineMemberDraft('${m.member_id}', 'status', this.value, this)">
+                <option value="Aktif" ${cur.status === "Aktif" ? "selected" : ""}>Aktif</option>
+                <option value="Nonaktif" ${cur.status === "Nonaktif" ? "selected" : ""}>Nonaktif</option>
+              </select>
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-xs btn-soft-danger" onclick="confirmDeleteMember('${m.member_id}')">Hapus</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderAdminMembersTbody() {
+      const tbody = document.getElementById("admin-members-tbody");
+      if (tbody) tbody.innerHTML = buildAdminMembersRowsHTML();
+    }
+
+    function toggleInlineMemberEdit(enable) {
+      state.memberInlineEdit = Boolean(enable);
+      if (!enable) state.inlineMemberDrafts = {};
+      renderCurrentPage();
+    }
+
+    function updateInlineMemberDraft(memberId, field, value, inputEl) {
+      const orig = state.members.find(m => m.member_id === memberId);
+      if (!orig) return;
+      if (!state.inlineMemberDrafts[memberId]) {
+        state.inlineMemberDrafts[memberId] = { ...orig };
+      }
+      state.inlineMemberDrafts[memberId][field] = value;
+
+      const d = state.inlineMemberDrafts[memberId];
+      const isSame =
+        String(d.kode_anggota || "") === String(orig.kode_anggota || "") &&
+        String(d.nama || "") === String(orig.nama || "") &&
+        String(d.unit_kelompok || "") === String(orig.unit_kelompok || "") &&
+        String(d.no_wa || "") === String(orig.no_wa || "") &&
+        Number(d.nominal_iuran || 0) === Number(orig.nominal_iuran || 0) &&
+        String(d.status || "Aktif") === String(orig.status || "Aktif");
+
+      if (isSame) {
+        delete state.inlineMemberDrafts[memberId];
+      }
+
+      const rowEl = inputEl?.closest("tr");
+      if (rowEl) rowEl.classList.toggle("inline-row-dirty", !isSame);
+
+      const saveBtn = document.getElementById("btn-save-inline-members");
+      if (saveBtn) {
+        const count = Object.keys(state.inlineMemberDrafts).length;
+        saveBtn.textContent = `💾 Simpan Perubahan (${count})`;
+        saveBtn.disabled = count === 0;
+      }
+    }
+
+    async function saveInlineMemberChanges() {
+      const list = Object.values(state.inlineMemberDrafts || {});
+      if (list.length === 0) return;
+
+      const invalid = list.find(item => !String(item.nama || "").trim());
+      if (invalid) {
+        showToast("Nama lengkap anggota tidak boleh kosong.", "error");
+        return;
+      }
+
+      setLoading(true, `Menyimpan ${list.length} perubahan ke Spreadsheet...`);
+      try {
+        const res = await apiRequest("saveMembersBatch", { members: list }, "POST");
+        state.memberInlineEdit = false;
+        state.inlineMemberDrafts = {};
+        showToast(res.message, "success");
+        await refreshData({ fresh: true });
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function openBulkNominalModal() {
+      if (!isAdmin()) return openLoginModal();
+      const zeroCount = state.members.filter(m => m.status === "Aktif" && (Number(m.nominal_iuran) || 0) <= 0).length;
+      const activeCount = state.members.filter(m => m.status === "Aktif").length;
+
+      openModal(
+        "Set Nominal Iuran Massal",
+        `
+          <form onsubmit="submitBulkNominal(event)" style="display:flex; flex-direction:column; gap:13px;">
+            <p style="font-size:13px; color:var(--text-muted);">
+              Terapkan nominal iuran ke banyak anggota sekaligus tanpa perlu edit satu per satu. Perubahan otomatis tersimpan ke Google Sheets.
+            </p>
+            <div class="form-group">
+              <label>Nominal Iuran per Bulan (Rp)</label>
+              <input type="number" id="bulk-nominal-val" class="input-control" value="${Number(state.settings.nominal_default) || 25000}" min="1000" step="500" required />
+            </div>
+            <div class="form-group">
+              <label>Target Anggota</label>
+              <select id="bulk-nominal-target" class="select-control">
+                <option value="ZERO_ONLY" ${zeroCount > 0 ? "selected" : ""}>Hanya yang masih Rp 0 (${zeroCount} anggota)</option>
+                <option value="ALL_ACTIVE" ${zeroCount === 0 ? "selected" : ""}>Semua anggota aktif (${activeCount} anggota)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Terapkan & Simpan ke Spreadsheet</button>
+          </form>
+        `
+      );
+    }
+
+    async function submitBulkNominal(e) {
+      e.preventDefault();
+      const val = Number(document.getElementById("bulk-nominal-val").value) || 0;
+      const mode = document.getElementById("bulk-nominal-target").value;
+      if (val <= 0) {
+        showToast("Nominal harus lebih dari 0.", "error");
+        return;
+      }
+
+      const targets = state.members.filter(m => {
+        if (m.status !== "Aktif") return false;
+        return mode === "ZERO_ONLY" ? (Number(m.nominal_iuran) || 0) <= 0 : true;
+      });
+
+      if (targets.length === 0) {
+        showToast("Tidak ada anggota yang sesuai target.", "info");
+        return;
+      }
+
+      const payloadMembers = targets.map(m => ({ ...m, nominal_iuran: val }));
+      setLoading(true, `Memperbarui iuran ${payloadMembers.length} anggota...`);
+      try {
+        const res = await apiRequest("saveMembersBatch", { members: payloadMembers }, "POST");
+        closeModal();
+        showToast(res.message, "success");
+        await refreshData({ fresh: true });
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ==========================================
+    // BOOTSTRAP APLIKASI & SINKRONISASI 2 ARAH
     // ==========================================
     (function initApp() {
       // Deteksi otomatis jika dijalankan di dalam Blogger
@@ -4303,6 +4619,23 @@
       }
 
       refreshData();
+
+      // Sinkron otomatis Spreadsheet -> Web saat berpindah kembali ke tab web & polling 15 detik
+      if (!IS_PREVIEW) {
+        const triggerSilentSync = () => {
+          if (document.visibilityState !== "visible") return;
+          if (Date.now() - state.lastSyncAt < 3000) return;
+          refreshData({ silent: true, fresh: true });
+        };
+
+        window.addEventListener("focus", triggerSilentSync);
+        document.addEventListener("visibilitychange", triggerSilentSync);
+        setInterval(() => {
+          if (document.visibilityState === "visible") {
+            refreshData({ silent: true, fresh: false });
+          }
+        }, 15000);
+      }
     })();
   </script>
 </body>
